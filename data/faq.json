@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "question": "What is Schedula?",
+    "answer": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+  },
+  {
+    "id": 2,
+    "question": "How do I cancel an appointment?",
+    "answer": "You can cancel your appointment by visiting your appointment history page, selecting the appointment you want to cancel, and clicking the 'Cancel Appointment' button. Please note that cancellations should be made at least 24 hours before your scheduled appointment time."
+  },
+  {
+    "id": 3,
+    "question": "Why I can't book appointment?",
+    "answer": "There could be several reasons why you're unable to book an appointment: your account might not be verified, the selected time slot might no longer be available, or there might be a technical issue. Please try refreshing the page or contact our support team for assistance."
+  },
+  {
+    "id": 4,
+    "question": "Why are there no appointment slots available?",
+    "answer": "Appointment availability depends on the doctor's schedule and existing bookings. During peak times or for popular specialists, slots may fill up quickly. We recommend booking appointments well in advance or checking back regularly as new slots may become available due to cancellations."
+  }
+]
