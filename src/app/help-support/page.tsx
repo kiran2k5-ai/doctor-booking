@@ -85,12 +85,12 @@ const FAQTab = () => {
 // Contact Tab Component
 const ContactTab = () => {
   return (
-    <div className="flex justify-center">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 w-full max-w-sm">
-        <div className="flex items-center space-x-3">
-          <div className="bg-teal-100 p-3 rounded-full">
+    <div className="p-4 sm:p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="flex items-start space-x-3">
+          <div className="bg-teal-500 p-2 rounded-full flex-shrink-0">
             <svg
-              className="w-6 h-6 text-teal-600"
+              className="w-5 h-5 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -104,11 +104,11 @@ const ContactTab = () => {
               />
             </svg>
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+          <div className="flex-1">
+            <h3 className="text-base font-semibold text-gray-900 mb-1">
               Call us
             </h3>
-            <p className="text-gray-700 font-medium">
+            <p className="text-sm text-gray-600 font-medium">
               98745 61238
             </p>
           </div>

@@ -1,6 +1,7 @@
 {
-  "name": "mydoctor",
+  "name": "mydoctor-help-support",
   "version": "0.1.0",
+  "description": "Medical appointment app help and support center with FAQ and contact information",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

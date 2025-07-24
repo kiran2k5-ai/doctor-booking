@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MyDoctor - Medical Appointment App
+
+A modern medical appointment booking application built with Next.js, TypeScript, and Tailwind CSS.
+
+## Features
+
+- **Help and Support Page** with FAQ accordion and Contact information
+- **Responsive Design** - Mobile-first approach
+- **TypeScript** for type safety
+- **Tailwind CSS** for styling
+- **Interactive UI** with smooth animations
+
+## Project Structure
+
+```
+mydoctor/
+├── src/
+│   └── app/
+│       ├── help-support/
+│       │   └── page.tsx          # Help & Support page
+│       ├── layout.tsx
+│       └── page.tsx
+├── data/
+│   └── faq.json                  # FAQ data
+└── ...
+```
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Make sure you have the following installed:
+- [Node.js](https://nodejs.org/) (version 18 or higher)
+- npm (comes with Node.js)
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/kiran2k5-ai/doctor-booking.git
+   cd doctor-booking
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open your browser:**
+   Navigate to [http://localhost:3000](http://localhost:3000) to see the application.
+
+### Available Scripts
+
+- `npm run dev` - Runs the development server
+- `npm run build` - Builds the app for production
+- `npm run start` - Runs the built app in production mode
+- `npm run lint` - Runs ESLint for code linting
+
+## Pages
+
+### Help and Support (`/help-support`)
+- **FAQ Tab**: Interactive accordion with frequently asked questions
+- **Contact Tab**: Contact information with phone number
+- **Responsive Design**: Works on all screen sizes
+- **Accessibility**: Keyboard navigation and screen reader support
+
+## Technologies Used
+
+- **Next.js 15.4.3** - React framework with App Router
+- **TypeScript** - For type safety
+- **Tailwind CSS** - For styling
+- **React Hooks** - For state management
+
+## Development
+
+To modify the FAQ content, edit the `data/faq.json` file:
+
+```json
+[
+  {
+    "id": 1,
+    "question": "Your question here",
+    "answer": "Your answer here"
+  }
+]
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Browser Support
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+This application supports all modern browsers including:
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License.
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+To learn more about the technologies used:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
