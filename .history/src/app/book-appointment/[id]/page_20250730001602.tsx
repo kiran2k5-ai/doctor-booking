@@ -56,7 +56,6 @@ export default function DoctorDetailPage() {
   const doctorId = params.id as string;
   
   const [doctor, setDoctor] = useState<Doctor | null>(null);
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [consultationType, setConsultationType] = useState<'in-person' | 'video'>('in-person');
@@ -67,12 +66,8 @@ export default function DoctorDetailPage() {
       try {
         const response = await fetch(`/api/doctors/${doctorId}`);
         if (response.ok) {
-          const result = await response.json();
-          if (result.success && result.data) {
-            setDoctor(result.data);
-          } else {
-            console.error('Failed to fetch doctor data:', result.message);
-          }
+          const doctorData = await response.json();
+          setDoctor(doctorData);
         } else {
           console.error('Failed to fetch doctor data');
         }
@@ -80,36 +75,29 @@ export default function DoctorDetailPage() {
         console.error('Error fetching doctor:', error);
       }
     };
-
-    // Fetch time slots for the doctor
-    const fetchTimeSlots = async () => {
-      try {
-        const dateStr = selectedDate.toISOString().split('T')[0];
-        const response = await fetch(`/api/doctors/${doctorId}/slots?date=${dateStr}`);
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success && result.data) {
-            // Flatten the grouped slots into a single array
-            const allSlots = [
-              ...result.data.morning,
-              ...result.data.afternoon,
-              ...result.data.evening
-            ];
-            setTimeSlots(allSlots);
-          }
-        } else {
-          console.error('Failed to fetch time slots');
-        }
-      } catch (error) {
-        console.error('Error fetching time slots:', error);
-      }
-    };
     
     if (doctorId) {
       fetchDoctor();
-      fetchTimeSlots();
     }
-  }, [doctorId, selectedDate]);
+  }, [doctorId]);
+
+  // Mock time slots
+  const timeSlots: TimeSlot[] = [
+    { id: '1', time: '10:00 AM', available: true, type: 'morning' },
+    { id: '2', time: '10:30 AM', available: true, type: 'morning' },
+    { id: '3', time: '11:00 AM', available: false, type: 'morning' },
+    { id: '4', time: '11:30 AM', available: true, type: 'morning' },
+    { id: '5', time: '12:00 PM', available: true, type: 'morning' },
+    { id: '6', time: '02:00 PM', available: true, type: 'afternoon' },
+    { id: '7', time: '02:30 PM', available: true, type: 'afternoon' },
+    { id: '8', time: '03:00 PM', available: false, type: 'afternoon' },
+    { id: '9', time: '03:30 PM', available: true, type: 'afternoon' },
+    { id: '10', time: '04:00 PM', available: true, type: 'afternoon' },
+    { id: '11', time: '05:00 PM', available: true, type: 'evening' },
+    { id: '12', time: '05:30 PM', available: true, type: 'evening' },
+    { id: '13', time: '06:00 PM', available: true, type: 'evening' },
+    { id: '14', time: '06:30 PM', available: false, type: 'evening' },
+  ];
 
   const renderStars = (rating: number) => {
     const fullStars = Math.floor(rating);
@@ -192,22 +180,20 @@ export default function DoctorDetailPage() {
         <div className="px-4 py-6">
           <div className="flex items-start space-x-4">
             <div className="w-20 h-20 rounded-xl overflow-hidden bg-gradient-to-br from-cyan-400 to-blue-500">
-              {doctor?.image ? (
-                <img
-                  src={doctor.image}
-                  alt={doctor.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Fallback to initial with gradient background
-                    e.currentTarget.style.display = 'none';
-                    const fallback = e.currentTarget.parentElement?.querySelector('.fallback-initial') as HTMLDivElement;
-                    if (fallback) {
-                      fallback.style.display = 'flex';
-                    }
-                  }}
-                />
-              ) : null}
-              <div className="fallback-initial w-full h-full bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center" style={{ display: doctor?.image ? 'none' : 'flex' }}>
+              <img
+                src={doctor?.image || ''}
+                alt={doctor?.name || 'Doctor'}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to initial with gradient background
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.nextElementSibling as HTMLDivElement;
+                  if (fallback) {
+                    fallback.style.display = 'flex';
+                  }
+                }}
+              />
+              <div className="w-full h-full bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center hidden">
                 <span className="text-white font-semibold text-xl">
                   {doctor?.name?.split(' ')[1]?.charAt(0) || 'D'}
                 </span>
@@ -408,7 +394,7 @@ export default function DoctorDetailPage() {
           <div>
             <p className="text-sm text-gray-600">Consultation Fee</p>
             <p className="font-semibold text-gray-900">
-              ₹{consultationType === 'video' ? (doctor?.consultationFee || 0) - 100 : doctor?.consultationFee}
+              ₹{consultationType === 'video' ? doctor.consultationFee - 100 : doctor.consultationFee}
             </p>
           </div>
           {selectedSlot && (

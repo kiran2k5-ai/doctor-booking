@@ -56,7 +56,6 @@ export default function DoctorDetailPage() {
   const doctorId = params.id as string;
   
   const [doctor, setDoctor] = useState<Doctor | null>(null);
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [consultationType, setConsultationType] = useState<'in-person' | 'video'>('in-person');
@@ -80,36 +79,29 @@ export default function DoctorDetailPage() {
         console.error('Error fetching doctor:', error);
       }
     };
-
-    // Fetch time slots for the doctor
-    const fetchTimeSlots = async () => {
-      try {
-        const dateStr = selectedDate.toISOString().split('T')[0];
-        const response = await fetch(`/api/doctors/${doctorId}/slots?date=${dateStr}`);
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success && result.data) {
-            // Flatten the grouped slots into a single array
-            const allSlots = [
-              ...result.data.morning,
-              ...result.data.afternoon,
-              ...result.data.evening
-            ];
-            setTimeSlots(allSlots);
-          }
-        } else {
-          console.error('Failed to fetch time slots');
-        }
-      } catch (error) {
-        console.error('Error fetching time slots:', error);
-      }
-    };
     
     if (doctorId) {
       fetchDoctor();
-      fetchTimeSlots();
     }
-  }, [doctorId, selectedDate]);
+  }, [doctorId]);
+
+  // Mock time slots
+  const timeSlots: TimeSlot[] = [
+    { id: '1', time: '10:00 AM', available: true, type: 'morning' },
+    { id: '2', time: '10:30 AM', available: true, type: 'morning' },
+    { id: '3', time: '11:00 AM', available: false, type: 'morning' },
+    { id: '4', time: '11:30 AM', available: true, type: 'morning' },
+    { id: '5', time: '12:00 PM', available: true, type: 'morning' },
+    { id: '6', time: '02:00 PM', available: true, type: 'afternoon' },
+    { id: '7', time: '02:30 PM', available: true, type: 'afternoon' },
+    { id: '8', time: '03:00 PM', available: false, type: 'afternoon' },
+    { id: '9', time: '03:30 PM', available: true, type: 'afternoon' },
+    { id: '10', time: '04:00 PM', available: true, type: 'afternoon' },
+    { id: '11', time: '05:00 PM', available: true, type: 'evening' },
+    { id: '12', time: '05:30 PM', available: true, type: 'evening' },
+    { id: '13', time: '06:00 PM', available: true, type: 'evening' },
+    { id: '14', time: '06:30 PM', available: false, type: 'evening' },
+  ];
 
   const renderStars = (rating: number) => {
     const fullStars = Math.floor(rating);

@@ -111,6 +111,24 @@ export default function DoctorDetailPage() {
     }
   }, [doctorId, selectedDate]);
 
+  // Mock time slots
+  const timeSlots: TimeSlot[] = [
+    { id: '1', time: '10:00 AM', available: true, type: 'morning' },
+    { id: '2', time: '10:30 AM', available: true, type: 'morning' },
+    { id: '3', time: '11:00 AM', available: false, type: 'morning' },
+    { id: '4', time: '11:30 AM', available: true, type: 'morning' },
+    { id: '5', time: '12:00 PM', available: true, type: 'morning' },
+    { id: '6', time: '02:00 PM', available: true, type: 'afternoon' },
+    { id: '7', time: '02:30 PM', available: true, type: 'afternoon' },
+    { id: '8', time: '03:00 PM', available: false, type: 'afternoon' },
+    { id: '9', time: '03:30 PM', available: true, type: 'afternoon' },
+    { id: '10', time: '04:00 PM', available: true, type: 'afternoon' },
+    { id: '11', time: '05:00 PM', available: true, type: 'evening' },
+    { id: '12', time: '05:30 PM', available: true, type: 'evening' },
+    { id: '13', time: '06:00 PM', available: true, type: 'evening' },
+    { id: '14', time: '06:30 PM', available: false, type: 'evening' },
+  ];
+
   const renderStars = (rating: number) => {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
