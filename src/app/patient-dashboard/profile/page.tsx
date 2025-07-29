@@ -184,7 +184,7 @@ export default function ProfilePage() {
               <input
                 type="text"
                 defaultValue={user.name}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
               />
             </div>
 
@@ -193,7 +193,7 @@ export default function ProfilePage() {
               <input
                 type="email"
                 defaultValue={user.email}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
               />
             </div>
 
@@ -202,7 +202,7 @@ export default function ProfilePage() {
               <input
                 type="tel"
                 defaultValue={user.phone}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
               />
             </div>
 
@@ -211,7 +211,7 @@ export default function ProfilePage() {
               <input
                 type="date"
                 defaultValue={user.dateOfBirth}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
               />
             </div>
 
@@ -219,7 +219,7 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
               <select
                 defaultValue={user.gender}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
               >
                 <option value="">Select Gender</option>
                 <option value="Male">Male</option>
@@ -242,7 +242,7 @@ export default function ProfilePage() {
               <input
                 type="tel"
                 defaultValue={user.emergencyContact}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
               />
             </div>
 
@@ -250,7 +250,7 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">Blood Type</label>
               <select
                 defaultValue={user.bloodType}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
               >
                 <option value="">Select Blood Type</option>
                 <option value="A+">A+</option>
@@ -270,7 +270,7 @@ export default function ProfilePage() {
                 type="text"
                 defaultValue={user.allergies?.join(', ')}
                 placeholder="Enter allergies separated by commas"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-500"
               />
             </div>
           </div>

@@ -243,7 +243,7 @@ export default function BookAppointmentPage() {
             placeholder="Search Doctors"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-12 py-3 bg-gray-100 border border-gray-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent focus:bg-white"
+            className="w-full pl-10 pr-12 py-3 bg-gray-100 border border-gray-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent focus:bg-white text-gray-900 placeholder-gray-500"
           />
           <button
             onClick={() => setShowFilters(!showFilters)}
