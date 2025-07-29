@@ -43,34 +43,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
-      {/* Floating Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Large dark circle */}
-        <div className="absolute -top-20 -left-20 w-40 h-40 bg-gray-800 rounded-full flex items-center justify-center">
-          <span className="text-pink-500 text-4xl font-bold">$</span>
-        </div>
-        
-        {/* Small pink circles */}
-        <div className="absolute top-32 right-20 w-16 h-16 bg-pink-500 rounded-full flex items-center justify-center">
-          <span className="text-white text-xl font-bold">$</span>
-        </div>
-        
-        <div className="absolute top-52 left-16 w-12 h-12 bg-pink-500 rounded-full flex items-center justify-center">
-          <span className="text-white text-lg font-bold">$</span>
-        </div>
-        
-        <div className="absolute bottom-40 right-8 w-20 h-20 bg-yellow-400 rounded-full flex items-center justify-center">
-          <span className="text-white text-2xl font-bold">$</span>
-        </div>
-        
-        <div className="absolute bottom-20 left-12 w-14 h-14 bg-pink-500 rounded-full flex items-center justify-center">
-          <span className="text-white text-xl font-bold">$</span>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-gray-50">
       {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex flex-col justify-center px-6 py-12">
+      <div className="min-h-screen flex flex-col justify-center px-6 py-12">
         <div className="w-full max-w-sm mx-auto">
           {/* Header */}
           <div className="text-center mb-8">

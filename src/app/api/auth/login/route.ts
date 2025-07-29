@@ -1,23 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Mock user database
-const mockUsers = [
-  {
-    id: '1',
-    email: 'user@example.com',
-    phone: '+919876543210',
-    name: 'John Doe'
-  },
-  {
-    id: '2',
-    email: 'admin@hospital.com',
-    phone: '+919876543211',
-    name: 'Admin User'
-  }
-];
-
-// Mock OTP storage (in production, use Redis or database)
-const otpStorage = new Map<string, { otp: string; expires: number; userId: string }>();
+import { otpStorage, mockUsers } from '../storage';
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,16 +12,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user by email or phone
-    const user = mockUsers.find(
+    // For development: Accept any contact and create a mock user
+    let user = mockUsers.find(
       u => u.email.toLowerCase() === contact.toLowerCase() || u.phone === contact
     );
 
+    // If user not found, create a temporary mock user for testing
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      user = {
+        id: `temp-${Date.now()}`,
+        email: contact.includes('@') ? contact : 'temp@example.com',
+        phone: contact.includes('@') ? '+919999999999' : contact,
+        name: 'Test User'
+      };
     }
 
     // Generate 4-digit OTP
