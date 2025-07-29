@@ -4,7 +4,7 @@ import { getTimeSlotsByDoctor } from '../../storage';
 // GET /api/doctors/[id]/slots - Get available time slots for a doctor
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const awaitedParams = await params;

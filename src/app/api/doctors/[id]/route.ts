@@ -4,7 +4,7 @@ import { findDoctorById, mockDoctors } from '../storage';
 // GET /api/doctors/[id] - Get doctor by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const awaitedParams = await params;
@@ -39,10 +39,11 @@ export async function GET(
 // PUT /api/doctors/[id] - Update doctor by ID
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const doctorId = params.id;
+    const awaitedParams = await params;
+    const doctorId = awaitedParams.id;
     const updateData = await request.json();
 
     const doctorIndex = mockDoctors.findIndex(doctor => doctor.id === doctorId);
@@ -81,10 +82,11 @@ export async function PUT(
 // DELETE /api/doctors/[id] - Delete doctor by ID
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const doctorId = params.id;
+    const awaitedParams = await params;
+    const doctorId = awaitedParams.id;
 
     const doctorIndex = mockDoctors.findIndex(doctor => doctor.id === doctorId);
 

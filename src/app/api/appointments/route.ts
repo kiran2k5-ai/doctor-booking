@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { bookAppointment, mockAppointments, findDoctorById } from '../storage';
+import { bookAppointment, mockAppointments, findDoctorById } from '../doctors/storage';
 
 // GET /api/appointments - Get all appointments for a patient
 export async function GET(request: NextRequest) {

@@ -12,7 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ phone: string; name?: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
 

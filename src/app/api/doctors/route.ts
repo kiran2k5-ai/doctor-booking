@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
 
     // Search doctors based on query and specialty
-    let filteredDoctors = searchDoctors(query, specialty);
+    const filteredDoctors = searchDoctors(query, specialty);
 
     // Pagination
     const startIndex = (page - 1) * limit;

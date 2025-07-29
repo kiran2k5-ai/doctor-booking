@@ -59,8 +59,6 @@ export default function OTPVerificationPage() {
         throw new Error(data.error || 'OTP verification failed');
       }
 
-      
-      // Store user data and token
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('token', data.token);
       sessionStorage.removeItem('loginContact');
@@ -69,7 +67,9 @@ export default function OTPVerificationPage() {
       
       setTimeout(() => {
         router.push('/patient-dashboard');
-      }, 2000);    } catch (err) {
+      }, 2000);
+      
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
@@ -219,7 +219,6 @@ export default function OTPVerificationPage() {
           </div>
 
           <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
-            <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
             <button
               onClick={() => handleNumberPadClick('1')}
               className="w-16 h-16 text-xl font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition duration-200"
