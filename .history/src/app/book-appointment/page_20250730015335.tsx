@@ -67,6 +67,7 @@ export default function BookAppointmentPage() {
     }
   }, [router]);
 
+  // Mock doctors data based on the design
   const doctors: Doctor[] = [
     {
       id: '1',
@@ -305,6 +306,7 @@ export default function BookAppointmentPage() {
                           alt={doctor.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
+                            // Fallback to initial with gradient background
                             e.currentTarget.style.display = 'none';
                             const fallback = e.currentTarget.nextElementSibling as HTMLDivElement;
                             if (fallback) {

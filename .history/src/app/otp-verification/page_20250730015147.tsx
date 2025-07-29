@@ -137,7 +137,9 @@ export default function OTPVerificationPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Main Content */}
       <div className="min-h-screen flex flex-col px-6 py-12">
+        {/* Header */}
         <div className="flex items-center mb-8">
           <button
             onClick={() => router.back()}
@@ -148,7 +150,9 @@ export default function OTPVerificationPage() {
           <h1 className="text-xl font-semibold text-gray-900 ml-4">OTP Code Verification</h1>
         </div>
 
+        {/* Content */}
         <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
+          {/* Message */}
           <div className="text-center mb-8">
             <p className="text-gray-600 text-sm mb-6">
               Code has been send to {contact.includes('@') 
@@ -157,12 +161,14 @@ export default function OTPVerificationPage() {
               }
             </p>
 
+            {/* Error Message */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
                 <p className="text-red-600 text-sm">{error}</p>
               </div>
             )}
 
+            {/* Success Message */}
             {isSuccess && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                 <div className="flex items-center justify-center mb-2">
@@ -177,6 +183,7 @@ export default function OTPVerificationPage() {
               </div>
             )}
 
+            {/* OTP Input Display */}
             <div className="flex justify-center space-x-4 mb-8">
               {otp.map((digit, index) => (
                 <input
@@ -193,6 +200,7 @@ export default function OTPVerificationPage() {
               ))}
             </div>
 
+            {/* Resend Code */}
             <p className="text-sm text-gray-600 mb-8">
               {resendCountdown > 0 ? (
                 <>
@@ -209,6 +217,7 @@ export default function OTPVerificationPage() {
               )}
             </p>
 
+            {/* Verify Button */}
             <button
               onClick={handleVerifyOTP}
               disabled={isLoading || otp.some(digit => digit === '') || isSuccess}
@@ -218,8 +227,9 @@ export default function OTPVerificationPage() {
             </button>
           </div>
 
+          {/* Number Pad */}
           <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
-            <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
+            {/* Row 1 */}
             <button
               onClick={() => handleNumberPadClick('1')}
               className="w-16 h-16 text-xl font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition duration-200"
@@ -239,6 +249,7 @@ export default function OTPVerificationPage() {
               3
             </button>
 
+            {/* Row 2 */}
             <button
               onClick={() => handleNumberPadClick('4')}
               className="w-16 h-16 text-xl font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition duration-200"
@@ -258,6 +269,7 @@ export default function OTPVerificationPage() {
               6
             </button>
 
+            {/* Row 3 */}
             <button
               onClick={() => handleNumberPadClick('7')}
               className="w-16 h-16 text-xl font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition duration-200"
@@ -277,6 +289,7 @@ export default function OTPVerificationPage() {
               9
             </button>
 
+            {/* Row 4 */}
             <button className="w-16 h-16 text-xl font-semibold text-gray-400">
               *
             </button>

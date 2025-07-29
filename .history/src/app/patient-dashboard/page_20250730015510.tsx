@@ -82,6 +82,7 @@ export default function PatientDashboard() {
     }
   ];
 
+  // Mock health metrics
   const healthMetrics: HealthMetric[] = [
     {
       id: '1',

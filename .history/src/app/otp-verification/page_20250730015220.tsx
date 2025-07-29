@@ -219,7 +219,7 @@ export default function OTPVerificationPage() {
           </div>
 
           <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
-            <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
+            {/* Row 1 */}
             <button
               onClick={() => handleNumberPadClick('1')}
               className="w-16 h-16 text-xl font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition duration-200"
@@ -239,6 +239,7 @@ export default function OTPVerificationPage() {
               3
             </button>
 
+            {/* Row 2 */}
             <button
               onClick={() => handleNumberPadClick('4')}
               className="w-16 h-16 text-xl font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition duration-200"
@@ -258,6 +259,7 @@ export default function OTPVerificationPage() {
               6
             </button>
 
+            {/* Row 3 */}
             <button
               onClick={() => handleNumberPadClick('7')}
               className="w-16 h-16 text-xl font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition duration-200"
@@ -277,6 +279,7 @@ export default function OTPVerificationPage() {
               9
             </button>
 
+            {/* Row 4 */}
             <button className="w-16 h-16 text-xl font-semibold text-gray-400">
               *
             </button>

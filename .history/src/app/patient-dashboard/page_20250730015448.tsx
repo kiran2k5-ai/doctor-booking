@@ -52,6 +52,7 @@ export default function PatientDashboard() {
     }
   }, [router]);
 
+  // Mock data for appointments
   const appointments: Appointment[] = [
     {
       id: '1',
@@ -82,6 +83,7 @@ export default function PatientDashboard() {
     }
   ];
 
+  // Mock health metrics
   const healthMetrics: HealthMetric[] = [
     {
       id: '1',

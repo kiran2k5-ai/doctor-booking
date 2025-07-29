@@ -44,20 +44,25 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Main Content */}
       <div className="min-h-screen flex flex-col justify-center px-6 py-12">
         <div className="w-full max-w-sm mx-auto">
+          {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-semibold text-gray-900 mb-2">Login</h1>
             <p className="text-gray-600 text-sm">Too Scheduled</p>
           </div>
 
+          {/* Login Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Error Message */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <p className="text-red-600 text-sm">{error}</p>
               </div>
             )}
 
+            {/* Mobile/Email Input */}
             <div>
               <label htmlFor="contact" className="block text-sm font-medium text-gray-700 mb-2">
                 Mobile /Email
@@ -74,6 +79,7 @@ export default function LoginPage() {
               />
             </div>
 
+            {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -94,6 +100,7 @@ export default function LoginPage() {
               </Link>
             </div>
 
+            {/* Login Button */}
             <button
               type="submit"
               disabled={isLoading || !contact.trim()}
@@ -102,6 +109,7 @@ export default function LoginPage() {
               {isLoading ? 'Sending OTP...' : 'Login'}
             </button>
 
+            {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300" />
@@ -111,6 +119,7 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Google Login */}
             <button
               type="button"
               className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition duration-200"
@@ -137,6 +146,7 @@ export default function LoginPage() {
             </button>
           </form>
 
+          {/* Sign Up Link */}
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}

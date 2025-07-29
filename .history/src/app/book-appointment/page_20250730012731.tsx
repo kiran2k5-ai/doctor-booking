@@ -54,6 +54,7 @@ export default function BookAppointmentPage() {
   const [favorites, setFavorites] = useState<string[]>([]);
 
   useEffect(() => {
+    // Get user data from localStorage
     const userData = localStorage.getItem('user');
     if (userData) {
       setUser(JSON.parse(userData));
@@ -61,12 +62,14 @@ export default function BookAppointmentPage() {
       router.push('/login');
     }
 
+    // Load favorites from localStorage
     const savedFavorites = localStorage.getItem('doctorFavorites');
     if (savedFavorites) {
       setFavorites(JSON.parse(savedFavorites));
     }
   }, [router]);
 
+  // Mock doctors data based on the design
   const doctors: Doctor[] = [
     {
       id: '1',
@@ -305,6 +308,7 @@ export default function BookAppointmentPage() {
                           alt={doctor.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
+                            // Fallback to initial with gradient background
                             e.currentTarget.style.display = 'none';
                             const fallback = e.currentTarget.nextElementSibling as HTMLDivElement;
                             if (fallback) {
