@@ -179,25 +179,10 @@ export default function DoctorDetailPage() {
       <div className="bg-white border-b">
         <div className="px-4 py-6">
           <div className="flex items-start space-x-4">
-            <div className="w-20 h-20 rounded-xl overflow-hidden bg-gradient-to-br from-cyan-400 to-blue-500">
-              <img
-                src={doctor.image}
-                alt={doctor.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  // Fallback to initial with gradient background
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling as HTMLDivElement;
-                  if (fallback) {
-                    fallback.style.display = 'flex';
-                  }
-                }}
-              />
-              <div className="w-full h-full bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center hidden">
-                <span className="text-white font-semibold text-xl">
-                  {doctor.name.split(' ')[1]?.charAt(0) || 'D'}
-                </span>
-              </div>
+            <div className="w-20 h-20 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center">
+              <span className="text-white font-semibold text-xl">
+                {doctor.name.split(' ')[1]?.charAt(0) || 'D'}
+              </span>
             </div>
             
             <div className="flex-1">

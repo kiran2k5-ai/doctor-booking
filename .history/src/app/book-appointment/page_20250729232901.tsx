@@ -82,7 +82,7 @@ export default function BookAppointmentPage() {
       location: 'Apollo Hospital, Delhi',
       availability: 'Available today',
       nextSlot: '10:30 AM-07:00 PM',
-      image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face',
+      image: '/doctors/dr-prakash.jpg',
       isAvailable: true,
       isFavorite: false,
       distance: '2.5 km',
@@ -91,7 +91,7 @@ export default function BookAppointmentPage() {
     },
     {
       id: '2',
-      name: 'Dr. Priya Sharma',
+      name: 'Dr. Prakash das',
       specialization: 'Psychologist',
       experience: '10 years',
       rating: 4.9,
@@ -100,7 +100,7 @@ export default function BookAppointmentPage() {
       location: 'Max Healthcare, Mumbai',
       availability: 'Available today',
       nextSlot: '10:30 AM-07:00 PM',
-      image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face',
+      image: '/doctors/dr-prakash-2.jpg',
       isAvailable: true,
       isFavorite: false,
       distance: '3.2 km',
@@ -109,7 +109,7 @@ export default function BookAppointmentPage() {
     },
     {
       id: '3',
-      name: 'Dr. Rajesh Kumar',
+      name: 'Dr. Prakash das',
       specialization: 'Psychologist',
       experience: '12 years',
       rating: 4.7,
@@ -118,7 +118,7 @@ export default function BookAppointmentPage() {
       location: 'Fortis Hospital, Bangalore',
       availability: 'Available today',
       nextSlot: '10:30 AM-07:00 PM',
-      image: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face',
+      image: '/doctors/dr-prakash-3.jpg',
       isAvailable: true,
       isFavorite: false,
       distance: '1.8 km',
@@ -127,7 +127,7 @@ export default function BookAppointmentPage() {
     },
     {
       id: '4',
-      name: 'Dr. Anita Verma',
+      name: 'Dr. Prakash das',
       specialization: 'Psychologist',
       experience: '6 years',
       rating: 4.6,
@@ -136,7 +136,7 @@ export default function BookAppointmentPage() {
       location: 'AIIMS, New Delhi',
       availability: 'Available today',
       nextSlot: '10:30 AM-07:00 PM',
-      image: 'https://images.unsplash.com/photo-1594824388853-c1c4ac42b5f1?w=150&h=150&fit=crop&crop=face',
+      image: '/doctors/dr-prakash-4.jpg',
       isAvailable: true,
       isFavorite: false,
       distance: '4.1 km',
@@ -310,10 +310,7 @@ export default function BookAppointmentPage() {
                           onError={(e) => {
                             // Fallback to initial with gradient background
                             e.currentTarget.style.display = 'none';
-                            const fallback = e.currentTarget.nextElementSibling as HTMLDivElement;
-                            if (fallback) {
-                              fallback.style.display = 'flex';
-                            }
+                            e.currentTarget.nextElementSibling!.style.display = 'flex';
                           }}
                         />
                         <div className="w-full h-full bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center hidden">
