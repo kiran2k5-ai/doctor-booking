@@ -23,7 +23,7 @@ export const mockUsers = [
     email: 'admin@hospital.com',
     phone: '+919876543211',
     name: 'Admin User'
-  },
+  }
   {
     id: '3',
     email: 'kiran@hospital.com',
