@@ -1,0 +1,328 @@
+{
+  "info": {
+    "name": "Doctor Booking API",
+    "description": "Complete API collection for the Doctor Booking System",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Doctors",
+      "item": [
+        {
+          "name": "Get All Doctors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctors",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctors"]
+            },
+            "description": "Get all doctors without any filters"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Doctors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctors?q=prakash&specialty=psychologist",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctors"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "prakash",
+                  "description": "Search query for doctor name, specialization, or location"
+                },
+                {
+                  "key": "specialty",
+                  "value": "psychologist",
+                  "description": "Filter by specialty"
+                }
+              ]
+            },
+            "description": "Search doctors by name, specialization, or location"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Doctors with Pagination",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctors?page=1&limit=3",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctors"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "3",
+                  "description": "Number of doctors per page"
+                }
+              ]
+            },
+            "description": "Get doctors with pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Doctor by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctors/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctors", "1"]
+            },
+            "description": "Get detailed information about a specific doctor"
+          },
+          "response": []
+        },
+        {
+          "name": "Add New Doctor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dr. John Smith\",\n  \"specialization\": \"Neurologist\",\n  \"experience\": \"7 years\",\n  \"consultationFee\": 700,\n  \"location\": \"City Hospital, Mumbai\",\n  \"rating\": 4.5,\n  \"reviewCount\": 45,\n  \"languages\": [\"English\", \"Hindi\"],\n  \"qualifications\": [\"MBBS\", \"MD Neurology\"],\n  \"about\": \"Experienced neurologist specializing in brain disorders\",\n  \"workingDays\": [\"Monday\", \"Tuesday\", \"Wednesday\", \"Thursday\", \"Friday\"],\n  \"workingHours\": \"9:00 AM - 5:00 PM\",\n  \"phoneNumber\": \"+91-9876543216\",\n  \"email\": \"dr.john@cityhospital.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/doctors",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctors"]
+            },
+            "description": "Add a new doctor to the system"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Doctor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consultationFee\": 550,\n  \"availability\": \"Available tomorrow\",\n  \"rating\": 4.9\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/doctors/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctors", "1"]
+            },
+            "description": "Update doctor information"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Doctor",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctors/6",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctors", "6"]
+            },
+            "description": "Delete a doctor from the system"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Time Slots",
+      "item": [
+        {
+          "name": "Get Doctor Time Slots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctors/1/slots?date=2025-07-29",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctors", "1", "slots"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2025-07-29",
+                  "description": "Date in YYYY-MM-DD format"
+                }
+              ]
+            },
+            "description": "Get available time slots for a specific doctor on a specific date"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Today's Slots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctors/1/slots",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctors", "1", "slots"]
+            },
+            "description": "Get today's available time slots for a doctor"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Get All Appointments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/appointments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments"]
+            },
+            "description": "Get all appointments in the system"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patient Appointments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/appointments?patientId=patient-1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments"],
+              "query": [
+                {
+                  "key": "patientId",
+                  "value": "patient-1",
+                  "description": "Filter appointments by patient ID"
+                }
+              ]
+            },
+            "description": "Get appointments for a specific patient"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Appointments by Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/appointments?status=scheduled",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "scheduled",
+                  "description": "Filter by appointment status (scheduled, completed, cancelled)"
+                }
+              ]
+            },
+            "description": "Get appointments filtered by status"
+          },
+          "response": []
+        },
+        {
+          "name": "Book New Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctorId\": \"1\",\n  \"patientId\": \"patient-123\",\n  \"date\": \"2025-07-30\",\n  \"time\": \"10:30 AM\",\n  \"type\": \"in-person\",\n  \"notes\": \"Regular checkup appointment\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments"]
+            },
+            "description": "Book a new appointment with a doctor"
+          },
+          "response": []
+        },
+        {
+          "name": "Book Video Consultation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctorId\": \"2\",\n  \"patientId\": \"patient-456\",\n  \"date\": \"2025-07-31\",\n  \"time\": \"02:00 PM\",\n  \"type\": \"video\",\n  \"notes\": \"Follow-up consultation via video call\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments"]
+            },
+            "description": "Book a video consultation appointment"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Specialties",
+      "item": [
+        {
+          "name": "Get All Specialties",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/specialties",
+              "host": ["{{base_url}}"],
+              "path": ["api", "specialties"]
+            },
+            "description": "Get all medical specialties with doctor counts"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}
