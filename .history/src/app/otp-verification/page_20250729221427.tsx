@@ -185,7 +185,7 @@ export default function OTPVerificationPage() {
                   </div>
                 </div>
                 <p className="text-green-800 text-sm font-medium text-center">OTP Verified Successfully!</p>
-                <p className="text-green-600 text-xs text-center mt-1">Redirecting to patient dashboard...</p>
+                <p className="text-green-600 text-xs text-center mt-1">Redirecting to dashboard...</p>
               </div>
             )}
 
