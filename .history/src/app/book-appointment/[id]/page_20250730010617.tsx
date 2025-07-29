@@ -343,28 +343,22 @@ export default function DoctorDetailPage() {
           <div className="mb-6">
             <h4 className="font-medium text-gray-900 mb-3">Morning</h4>
             <div className="grid grid-cols-3 gap-2">
-              {getSlotsByType('morning').length > 0 ? (
-                getSlotsByType('morning').map((slot) => (
-                  <button
-                    key={slot.id}
-                    onClick={() => slot.available && setSelectedSlot(slot.id)}
-                    disabled={!slot.available}
-                    className={`p-3 rounded-lg text-sm font-medium transition-colors ${
-                      selectedSlot === slot.id
-                        ? 'bg-cyan-500 text-white'
-                        : slot.available
-                        ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                        : 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    {slot.time}
-                  </button>
-                ))
-              ) : (
-                <div className="col-span-3 text-center py-4 text-gray-500 text-sm">
-                  No morning slots available
-                </div>
-              )}
+              {getSlotsByType('morning').map((slot) => (
+                <button
+                  key={slot.id}
+                  onClick={() => slot.available && setSelectedSlot(slot.id)}
+                  disabled={!slot.available}
+                  className={`p-3 rounded-lg text-sm font-medium transition-colors ${
+                    selectedSlot === slot.id
+                      ? 'bg-cyan-500 text-white'
+                      : slot.available
+                      ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                      : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  {slot.time}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -372,28 +366,22 @@ export default function DoctorDetailPage() {
           <div className="mb-6">
             <h4 className="font-medium text-gray-900 mb-3">Afternoon</h4>
             <div className="grid grid-cols-3 gap-2">
-              {getSlotsByType('afternoon').length > 0 ? (
-                getSlotsByType('afternoon').map((slot) => (
-                  <button
-                    key={slot.id}
-                    onClick={() => slot.available && setSelectedSlot(slot.id)}
-                    disabled={!slot.available}
-                    className={`p-3 rounded-lg text-sm font-medium transition-colors ${
-                      selectedSlot === slot.id
-                        ? 'bg-cyan-500 text-white'
-                        : slot.available
-                        ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                        : 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    {slot.time}
-                  </button>
-                ))
-              ) : (
-                <div className="col-span-3 text-center py-4 text-gray-500 text-sm">
-                  No afternoon slots available
-                </div>
-              )}
+              {getSlotsByType('afternoon').map((slot) => (
+                <button
+                  key={slot.id}
+                  onClick={() => slot.available && setSelectedSlot(slot.id)}
+                  disabled={!slot.available}
+                  className={`p-3 rounded-lg text-sm font-medium transition-colors ${
+                    selectedSlot === slot.id
+                      ? 'bg-cyan-500 text-white'
+                      : slot.available
+                      ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                      : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  {slot.time}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -401,28 +389,22 @@ export default function DoctorDetailPage() {
           <div className="mb-6">
             <h4 className="font-medium text-gray-900 mb-3">Evening</h4>
             <div className="grid grid-cols-3 gap-2">
-              {getSlotsByType('evening').length > 0 ? (
-                getSlotsByType('evening').map((slot) => (
-                  <button
-                    key={slot.id}
-                    onClick={() => slot.available && setSelectedSlot(slot.id)}
-                    disabled={!slot.available}
-                    className={`p-3 rounded-lg text-sm font-medium transition-colors ${
-                      selectedSlot === slot.id
-                        ? 'bg-cyan-500 text-white'
-                        : slot.available
-                        ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                        : 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    {slot.time}
-                  </button>
-                ))
-              ) : (
-                <div className="col-span-3 text-center py-4 text-gray-500 text-sm">
-                  No evening slots available
-                </div>
-              )}
+              {getSlotsByType('evening').map((slot) => (
+                <button
+                  key={slot.id}
+                  onClick={() => slot.available && setSelectedSlot(slot.id)}
+                  disabled={!slot.available}
+                  className={`p-3 rounded-lg text-sm font-medium transition-colors ${
+                    selectedSlot === slot.id
+                      ? 'bg-cyan-500 text-white'
+                      : slot.available
+                      ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                      : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  {slot.time}
+                </button>
+              ))}
             </div>
           </div>
         </div>
