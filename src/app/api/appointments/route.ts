@@ -107,15 +107,51 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
+
+    // Check if doctor is available on this date (not marked unavailable)
+    // (Assume doctorAvailability is imported or accessible here)
+
+    // Import doctorAvailability directly
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { doctorAvailability } = require('../doctor/availability/route');
+    const availRecord = doctorAvailability?.find((avail: any) => avail.doctorId === appointmentData.doctorId && avail.date === appointmentData.date);
+    if (availRecord && availRecord.isAvailable === false) {
+      return NextResponse.json({
+        success: false,
+        error: 'Doctor unavailable',
+        message: 'Doctor is unavailable on this date'
+      }, { status: 409 });
+    }
+
+    // Check if date is a working day for the doctor
+    const requestedDate = new Date(appointmentData.date);
+    const dayName = requestedDate.toLocaleDateString('en-US', { weekday: 'long' });
+    if (!doctor.workingDays.includes(dayName)) {
+      return NextResponse.json({
+        success: false,
+        error: 'Not working day',
+        message: 'Doctor does not work on this day'
+      }, { status: 409 });
+    }
+
+    // Prevent booking for past dates
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if (requestedDate < today) {
+      return NextResponse.json({
+        success: false,
+        error: 'Past date',
+        message: 'Cannot book appointments for past dates'
+      }, { status: 400 });
+    }
+
     // Check if time slot is available
-    // In a real app, this would check against the database
     const existingAppointment = mockAppointments.find(apt => 
       apt.doctorId === appointmentData.doctorId && 
       apt.date === appointmentData.date && 
       apt.time === appointmentData.time &&
       apt.status !== 'cancelled'
     );
-
     if (existingAppointment) {
       return NextResponse.json({
         success: false,
@@ -151,6 +187,24 @@ export async function POST(request: NextRequest) {
         image: doctor.image
       }
     };
+
+    // Notify doctor about new appointment
+    try {
+      await fetch('/api/doctor/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          doctorId: appointmentData.doctorId,
+          type: 'appointment',
+          title: 'New Appointment Booked',
+          message: `New appointment scheduled for ${appointmentData.date} at ${appointmentData.time}`,
+          appointmentId: newAppointment.id
+        })
+      });
+    } catch (notificationError) {
+      console.error('Failed to send notification:', notificationError);
+      // Don't fail the appointment booking if notification fails
+    }
 
     return NextResponse.json({
       success: true,

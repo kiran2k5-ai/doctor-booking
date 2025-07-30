@@ -51,6 +51,30 @@ export interface Appointment {
 
 // Mock doctors data
 export const mockDoctors: Doctor[] = [
+  // Demo doctor always available for testing
+  {
+    id: 'demo',
+    name: 'Dr. Demo Always',
+    specialization: 'General Physician',
+    experience: '5 years',
+    rating: 5.0,
+    reviewCount: 999,
+    consultationFee: 100,
+    location: 'Test Clinic, Everywhere',
+    availability: 'Available today',
+    nextSlot: '09:00 AM-06:00 PM',
+    image: '',
+    isAvailable: true,
+    distance: '0 km',
+    languages: ['English'],
+    qualifications: ['MBBS'],
+    about: 'Demo doctor for testing. Always available, all days.',
+    workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    workingHours: '9:00 AM - 6:00 PM',
+    hospitalId: 'demo-hospital',
+    phoneNumber: '+91-9999999999',
+    email: 'demo@demo.com'
+  },
   {
     id: '1',
     name: 'Dr. Prakash Das',

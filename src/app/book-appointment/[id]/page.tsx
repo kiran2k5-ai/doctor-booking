@@ -62,6 +62,7 @@ export default function DoctorDetailPage() {
   
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [availability, setAvailability] = useState<{ isAvailable: boolean; notes?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -106,57 +107,67 @@ export default function DoctorDetailPage() {
       }
     };
 
+    // Fetch doctor availability for selected date
+    const fetchAvailability = async () => {
+      try {
+        const dateStr = getLocalDateString(selectedDate);
+        const response = await fetch(`/api/doctor/availability?doctorId=${doctorId}&date=${dateStr}`);
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setAvailability({ isAvailable: result.data.isAvailable, notes: result.data.notes });
+          } else {
+            setAvailability(null); // No record, treat as available
+          }
+        } else {
+          setAvailability(null); // No record, treat as available
+        }
+      } catch (error) {
+        setAvailability(null); // No record, treat as available
+      }
+    };
+
     if (doctorId) {
       setLoading(true);
-      fetchDoctor().finally(() => setLoading(false));
+      Promise.all([fetchDoctor(), fetchAvailability()]).finally(() => setLoading(false));
     }
-  }, [doctorId]);
+  }, [doctorId, selectedDate]);
 
   // Separate useEffect for time slots to allow independent loading
   useEffect(() => {
     const fetchTimeSlots = async () => {
       if (!doctorId) return;
-      
+      if (availability && availability.isAvailable === false) {
+        setTimeSlots([]);
+        return;
+      }
       try {
         setSlotsLoading(true);
         setSelectedSlot(null); // Clear selected slot when date changes
-        
         const dateStr = getLocalDateString(selectedDate);
-        console.log('Fetching slots for date:', dateStr, 'Selected date object:', selectedDate);
         const response = await fetch(`/api/doctors/${doctorId}/slots?date=${dateStr}`);
-        
         if (response.ok) {
           const result = await response.json();
-          console.log('Time slots API response:', result); // Debug log
-          
           if (result.success && result.data && result.data.slots) {
-            // Flatten the grouped slots into a single array with safe checks
             const morning = Array.isArray(result.data.slots.morning) ? result.data.slots.morning : [];
             const afternoon = Array.isArray(result.data.slots.afternoon) ? result.data.slots.afternoon : [];
             const evening = Array.isArray(result.data.slots.evening) ? result.data.slots.evening : [];
-            
             const allSlots = [...morning, ...afternoon, ...evening];
-            console.log('Processed slots:', { morning, afternoon, evening, allSlots }); // Debug log
             setTimeSlots(allSlots);
           } else {
-            console.log('No time slots data found:', result.message);
             setTimeSlots([]);
           }
         } else {
-          const errorText = await response.text();
-          console.error('Failed to fetch time slots. Status:', response.status, 'Response:', errorText);
           setTimeSlots([]);
         }
       } catch (error) {
-        console.error('Error fetching time slots:', error);
         setTimeSlots([]);
       } finally {
         setSlotsLoading(false);
       }
     };
-    
     fetchTimeSlots();
-  }, [doctorId, selectedDate]);
+  }, [doctorId, selectedDate, availability]);
 
   const renderStars = (rating: number) => {
     const fullStars = Math.floor(rating);
@@ -381,7 +392,6 @@ export default function DoctorDetailPage() {
       <div className="bg-white mt-2">
         <div className="px-4 py-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Time Slots</h3>
-          
           {/* Date Selection */}
           <div className="mb-6">
             <h4 className="font-medium text-gray-900 mb-3">Select Date</h4>
@@ -389,7 +399,6 @@ export default function DoctorDetailPage() {
               {generateDateOptions().map((date, index) => {
                 const isSelected = selectedDate.toDateString() === date.toDateString();
                 const isToday = date.toDateString() === new Date().toDateString();
-                
                 return (
                   <button
                     key={index}
@@ -411,7 +420,6 @@ export default function DoctorDetailPage() {
               })}
             </div>
           </div>
-          
           {/* Current Date Display */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
@@ -432,123 +440,132 @@ export default function DoctorDetailPage() {
               </div>
             )}
           </div>
-          
-          {/* Morning Slots */}
-          <div className="mb-6">
-            <h4 className="font-medium text-gray-900 mb-3">Morning</h4>
-            {slotsLoading ? (
-              <div className="grid grid-cols-3 gap-2">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse"></div>
-                ))}
-              </div>
-            ) : getSlotsByType('morning').length > 0 ? (
-              <div className="grid grid-cols-3 gap-2">
-                {getSlotsByType('morning').map((slot) => (
-                  <button
-                    key={slot.id}
-                    onClick={() => slot.available && setSelectedSlot(slot.id)}
-                    disabled={!slot.available}
-                    className={`p-3 rounded-lg text-sm font-medium transition-colors ${
-                      selectedSlot === slot.id
-                        ? 'bg-cyan-500 text-white'
-                        : slot.available
-                        ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                        : 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    {slot.time}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-4 text-gray-500">
-                <p className="text-sm">No morning slots available</p>
-              </div>
-            )}
-          </div>
-          {/* Afternoon Slots */}
-          <div className="mb-6">
-            <h4 className="font-medium text-gray-900 mb-3">Afternoon</h4>
-            {slotsLoading ? (
-              <div className="grid grid-cols-3 gap-2">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse"></div>
-                ))}
-              </div>
-            ) : getSlotsByType('afternoon').length > 0 ? (
-              <div className="grid grid-cols-3 gap-2">
-                {getSlotsByType('afternoon').map((slot) => (
-                  <button
-                    key={slot.id}
-                    onClick={() => slot.available && setSelectedSlot(slot.id)}
-                    disabled={!slot.available}
-                    className={`p-3 rounded-lg text-sm font-medium transition-colors ${
-                      selectedSlot === slot.id
-                        ? 'bg-cyan-500 text-white'
-                        : slot.available
-                        ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                        : 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    {slot.time}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-4 text-gray-500">
-                <p className="text-sm">No afternoon slots available</p>
-              </div>
-            )}
-          </div>
-
-          {/* Evening Slots */}
-          <div className="mb-6">
-            <h4 className="font-medium text-gray-900 mb-3">Evening</h4>
-            {slotsLoading ? (
-              <div className="grid grid-cols-3 gap-2">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse"></div>
-                ))}
-              </div>
-            ) : getSlotsByType('evening').length > 0 ? (
-              <div className="grid grid-cols-3 gap-2">
-                {getSlotsByType('evening').map((slot) => (
-                  <button
-                    key={slot.id}
-                    onClick={() => slot.available && setSelectedSlot(slot.id)}
-                    disabled={!slot.available}
-                    className={`p-3 rounded-lg text-sm font-medium transition-colors ${
-                      selectedSlot === slot.id
-                        ? 'bg-cyan-500 text-white'
-                        : slot.available
-                        ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                        : 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    {slot.time}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-4 text-gray-500">
-                <p className="text-sm">No evening slots available</p>
-              </div>
-            )}
-          </div>
-          
-          {/* No slots available message */}
-          {!slotsLoading && timeSlots.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <CalendarDaysIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-lg font-medium mb-2">No appointments available</p>
-              <p className="text-sm text-gray-400">
-                Doctor may not be available on this date or all slots are booked
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                Please try selecting a different date
-              </p>
+          {/* Doctor Unavailable Message */}
+          {availability && availability.isAvailable === false ? (
+            <div className="text-center py-8 text-red-500">
+              <CalendarDaysIcon className="w-12 h-12 mx-auto mb-3 text-red-300" />
+              <p className="text-lg font-medium mb-2">Doctor is unavailable on this date</p>
+              {availability.notes && <p className="text-sm text-red-400">{availability.notes}</p>}
+              <p className="text-xs text-gray-400 mt-1">Please try selecting a different date</p>
             </div>
+          ) : (
+            <>
+              {/* Morning Slots */}
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-900 mb-3">Morning</h4>
+                {slotsLoading ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : getSlotsByType('morning').length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {getSlotsByType('morning').map((slot) => (
+                      <button
+                        key={slot.id}
+                        onClick={() => slot.available && setSelectedSlot(slot.id)}
+                        disabled={!slot.available}
+                        className={`p-3 rounded-lg text-sm font-medium transition-colors ${
+                          selectedSlot === slot.id
+                            ? 'bg-cyan-500 text-white'
+                            : slot.available
+                            ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                            : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    <p className="text-sm">No morning slots available</p>
+                  </div>
+                )}
+              </div>
+              {/* Afternoon Slots */}
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-900 mb-3">Afternoon</h4>
+                {slotsLoading ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : getSlotsByType('afternoon').length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {getSlotsByType('afternoon').map((slot) => (
+                      <button
+                        key={slot.id}
+                        onClick={() => slot.available && setSelectedSlot(slot.id)}
+                        disabled={!slot.available}
+                        className={`p-3 rounded-lg text-sm font-medium transition-colors ${
+                          selectedSlot === slot.id
+                            ? 'bg-cyan-500 text-white'
+                            : slot.available
+                            ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                            : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    <p className="text-sm">No afternoon slots available</p>
+                  </div>
+                )}
+              </div>
+              {/* Evening Slots */}
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-900 mb-3">Evening</h4>
+                {slotsLoading ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : getSlotsByType('evening').length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {getSlotsByType('evening').map((slot) => (
+                      <button
+                        key={slot.id}
+                        onClick={() => slot.available && setSelectedSlot(slot.id)}
+                        disabled={!slot.available}
+                        className={`p-3 rounded-lg text-sm font-medium transition-colors ${
+                          selectedSlot === slot.id
+                            ? 'bg-cyan-500 text-white'
+                            : slot.available
+                            ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                            : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    <p className="text-sm">No evening slots available</p>
+                  </div>
+                )}
+              </div>
+              {/* No slots available message */}
+              {!slotsLoading && timeSlots.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <CalendarDaysIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p className="text-lg font-medium mb-2">No appointments available</p>
+                  <p className="text-sm text-gray-400">
+                    Doctor may not be available on this date or all slots are booked
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Please try selecting a different date
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

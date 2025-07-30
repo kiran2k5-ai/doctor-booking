@@ -5,7 +5,7 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 
 export default function OTPVerificationPage() {
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [resendCountdown, setResendCountdown] = useState(55);
   const [contact, setContact] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -14,8 +14,11 @@ export default function OTPVerificationPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const storedContact = sessionStorage.getItem('loginContact');
-    if (!storedContact) {
+    const tempToken = sessionStorage.getItem('tempToken');
+    const userType = sessionStorage.getItem('userType');
+    const storedContact = sessionStorage.getItem('loginPhone');
+    
+    if (!tempToken || !storedContact) {
       router.push('/login');
       return;
     }
@@ -36,7 +39,7 @@ export default function OTPVerificationPage() {
 
   const handleVerifyOTP = async () => {
     const otpString = otp.join('');
-    if (otpString.length !== 4) {
+    if (otpString.length !== 6) {
       setError('Please enter complete OTP');
       return;
     }
@@ -45,12 +48,13 @@ export default function OTPVerificationPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/verify-otp', {
+      const tempToken = sessionStorage.getItem('tempToken');
+      const response = await fetch('/api/auth/enhanced-verify-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ contact, otp: otpString }),
+        body: JSON.stringify({ tempToken, otp: otpString }),
       });
 
       const data = await response.json();
@@ -59,14 +63,20 @@ export default function OTPVerificationPage() {
         throw new Error(data.error || 'OTP verification failed');
       }
 
-      localStorage.setItem('user', JSON.stringify(data.user));
-      localStorage.setItem('token', data.token);
-      sessionStorage.removeItem('loginContact');
+      // Store enhanced auth data
+      localStorage.setItem('authToken', data.authToken);
+      localStorage.setItem('userType', data.userType);
+      localStorage.setItem('userData', JSON.stringify(data.userData));
+      
+      // Clear session storage
+      sessionStorage.removeItem('tempToken');
+      sessionStorage.removeItem('userType');
+      sessionStorage.removeItem('loginPhone');
 
       setIsSuccess(true);
       
       setTimeout(() => {
-        router.push('/patient-dashboard');
+        router.push(data.redirectUrl);
       }, 2000);
       
     } catch (err) {
@@ -90,7 +100,7 @@ export default function OTPVerificationPage() {
 
       if (response.ok) {
         setResendCountdown(55);
-        setOtp(['', '', '', '']);
+        setOtp(['', '', '', '', '', '']);
         setError('');
       }
     } catch (err) {
