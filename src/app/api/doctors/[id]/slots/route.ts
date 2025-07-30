@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { findDoctorById, mockAppointments } from '../../storage';
+import { getTodayString, getLocalDateString, parseLocalDate, isPastDate } from '@/lib/dateUtils';
 
 // Helper function to generate time slots dynamically
 const generateTimeSlots = (doctorId: string, date: string) => {
   const doctor = findDoctorById(doctorId);
-  if (!doctor) return [];
+  if (!doctor) {
+    console.warn('Doctor not found for ID:', doctorId);
+    return [];
+  }
 
   const slots = [];
   const requestedDate = new Date(date);
@@ -15,7 +19,8 @@ const generateTimeSlots = (doctorId: string, date: string) => {
 
   // Check if the requested date is a working day for the doctor
   const dayName = requestedDate.toLocaleDateString('en-US', { weekday: 'long' });
-  if (!doctor.workingDays.includes(dayName)) {
+  if (!doctor.workingDays || !doctor.workingDays.includes(dayName)) {
+    console.log('No working day for doctor', doctorId, 'on', dayName);
     return []; // No slots on non-working days
   }
 
@@ -29,6 +34,8 @@ const generateTimeSlots = (doctorId: string, date: string) => {
     apt.date === date && 
     apt.status !== 'cancelled'
   );
+
+  console.log('Existing appointments for doctor', doctorId, 'on', date, ':', existingAppointments);
 
   let slotId = 1;
 
@@ -86,7 +93,9 @@ export async function GET(
     const awaitedParams = await params;
     const doctorId = awaitedParams.id;
     const { searchParams } = new URL(request.url);
-    const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
+    const date = searchParams.get('date') || getTodayString();
+
+    console.log('Slots API called for doctor:', doctorId, 'date:', date, 'today:', getTodayString());
 
     // Validate doctor exists
     const doctor = findDoctorById(doctorId);
@@ -99,11 +108,8 @@ export async function GET(
     }
 
     // Validate date format and ensure it's not in the past
-    const requestedDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
-
-    if (requestedDate < today) {
+    if (isPastDate(date)) {
+      console.log('Rejecting past date:', date, 'Today is:', getTodayString());
       return NextResponse.json({
         success: false,
         error: 'Invalid date',
@@ -114,12 +120,20 @@ export async function GET(
     // Generate dynamic time slots
     const timeSlots = generateTimeSlots(doctorId, date);
 
-    // Group slots by type
+    // Group slots by type with safe defaults
     const groupedSlots = {
       morning: timeSlots.filter(slot => slot.type === 'morning'),
       afternoon: timeSlots.filter(slot => slot.type === 'afternoon'),
       evening: timeSlots.filter(slot => slot.type === 'evening')
     };
+
+    console.log('Generated slots for doctor', doctorId, 'on', date, ':', {
+      totalSlots: timeSlots.length,
+      groupedSlots,
+      doctor: doctor.name
+    }); // Debug log
+
+    const requestedDate = parseLocalDate(date);
 
     return NextResponse.json({
       success: true,

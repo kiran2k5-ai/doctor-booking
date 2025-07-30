@@ -1,0 +1,18 @@
+console.log('=== Doctor Booking App - Clear Storage ===');
+console.log('');
+console.log('To clear localStorage in your browser:');
+console.log('1. Open Developer Tools (F12)');
+console.log('2. Go to Console tab');
+console.log('3. Run these commands:');
+console.log('');
+console.log('// Clear all doctor booking data');
+console.log('Object.keys(localStorage).forEach(key => {');
+console.log('  if (key.startsWith("doctor_booking_")) localStorage.removeItem(key);');
+console.log('});');
+console.log('');
+console.log('// Or clear everything');
+console.log('localStorage.clear();');
+console.log('');
+console.log('Then refresh the page to start fresh!');
+console.log('');
+console.log('This will remove any duplicate appointments and reset the app state.');

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAppointments } from '../../../lib/useAppointments';
 import { useParams } from 'next/navigation';
 import {
   ChevronLeftIcon,
@@ -20,6 +21,7 @@ import {
   StarIcon as StarSolid,
   HeartIcon as HeartSolid
 } from '@heroicons/react/24/solid';
+import { getTodayString, getLocalDateString, parseLocalDate, getDateOptions } from '@/lib/dateUtils';
 
 interface Doctor {
   id: string;
@@ -55,11 +57,19 @@ export default function DoctorDetailPage() {
   const params = useParams();
   const doctorId = params.id as string;
   
+  // Add the localStorage-enabled appointments hook
+  const { bookAppointment } = useAppointments('user123');
+  
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [slotsLoading, setSlotsLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(() => {
+    // Use utility function to get today's date without timezone issues
+    const today = new Date();
+    console.log('Initial date set to:', getTodayString(), 'Local date object:', today);
+    return today;
+  });
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [consultationType, setConsultationType] = useState<'in-person' | 'video'>('in-person');
 
@@ -111,7 +121,8 @@ export default function DoctorDetailPage() {
         setSlotsLoading(true);
         setSelectedSlot(null); // Clear selected slot when date changes
         
-        const dateStr = selectedDate.toISOString().split('T')[0];
+        const dateStr = getLocalDateString(selectedDate);
+        console.log('Fetching slots for date:', dateStr, 'Selected date object:', selectedDate);
         const response = await fetch(`/api/doctors/${doctorId}/slots?date=${dateStr}`);
         
         if (response.ok) {
@@ -119,19 +130,21 @@ export default function DoctorDetailPage() {
           console.log('Time slots API response:', result); // Debug log
           
           if (result.success && result.data && result.data.slots) {
-            // Flatten the grouped slots into a single array
-            const allSlots = [
-              ...(result.data.slots.morning || []),
-              ...(result.data.slots.afternoon || []),
-              ...(result.data.slots.evening || [])
-            ];
+            // Flatten the grouped slots into a single array with safe checks
+            const morning = Array.isArray(result.data.slots.morning) ? result.data.slots.morning : [];
+            const afternoon = Array.isArray(result.data.slots.afternoon) ? result.data.slots.afternoon : [];
+            const evening = Array.isArray(result.data.slots.evening) ? result.data.slots.evening : [];
+            
+            const allSlots = [...morning, ...afternoon, ...evening];
+            console.log('Processed slots:', { morning, afternoon, evening, allSlots }); // Debug log
             setTimeSlots(allSlots);
           } else {
             console.log('No time slots data found:', result.message);
             setTimeSlots([]);
           }
         } else {
-          console.error('Failed to fetch time slots');
+          const errorText = await response.text();
+          console.error('Failed to fetch time slots. Status:', response.status, 'Response:', errorText);
           setTimeSlots([]);
         }
       } catch (error) {
@@ -183,22 +196,16 @@ export default function DoctorDetailPage() {
       const appointmentData = {
         doctorId: doctor?.id,
         patientId: 'user123', // In real app, get from authentication context
-        date: selectedDate.toISOString().split('T')[0],
+        date: getLocalDateString(selectedDate),
         time: timeSlots.find(slot => slot.id === selectedSlot)?.time,
         type: consultationType,
         notes: ''
       };
 
-      // Make API call to book appointment
-      const response = await fetch('/api/appointments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(appointmentData),
-      });
+      console.log('Booking appointment with data:', appointmentData);
 
-      const result = await response.json();
+      // Use the localStorage-enabled booking function
+      const result = await bookAppointment(appointmentData);
 
       if (result.success) {
         // Show success message and redirect
@@ -206,7 +213,7 @@ export default function DoctorDetailPage() {
         router.push('/patient-dashboard/appointments');
       } else {
         // Handle error
-        alert(result.message || 'Failed to book appointment');
+        alert(result.error || 'Failed to book appointment');
       }
     } catch (error) {
       console.error('Error booking appointment:', error);

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAppointments } from '../../../lib/useAppointments';
+import { LocalStorageManager } from '../../../lib/storage';
 import {
   CalendarDaysIcon,
   ClockIcon,
@@ -14,61 +16,58 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline';
 
-interface Doctor {
-  name: string;
-  specialization: string;
-  location: string;
-  image?: string;
-}
-
+// Use the interface from the useAppointments hook
 interface Appointment {
   id: string;
-  doctorId: string;
   patientId: string;
+  doctorId: string;
   date: string;
   time: string;
-  type: 'in-person' | 'video';
-  status: 'scheduled' | 'completed' | 'cancelled';
-  consultationFee: number;
+  status: 'confirmed' | 'cancelled' | 'completed' | 'rescheduled';
+  reason?: string;
   notes?: string;
-  createdAt: string;
-  updatedAt?: string;
-  cancelledAt?: string;
-  doctor?: Doctor;
+  doctor?: {
+    name: string;
+    specialization: string;
+    image?: string;
+  };
 }
 
 export default function AppointmentsPage() {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'past'>('upcoming');
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Use the new localStorage-enabled hook
+  const {
+    appointments,
+    loading,
+    error,
+    cancelAppointment,
+    refreshAppointments
+  } = useAppointments('user123');
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Appointments page mounted with user123');
+    console.log('Current appointments from hook:', appointments);
+    console.log('Hook loading state:', loading);
+    console.log('Hook error state:', error);
+    
+    // Check localStorage directly
+    const directLocal = LocalStorageManager.getAppointments();
+    console.log('Direct localStorage check:', directLocal);
+  }, [appointments, loading, error]);
+  
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
   const [cancellingAppointment, setCancellingAppointment] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [appointmentToCancel, setAppointmentToCancel] = useState<Appointment | null>(null);
   const [cancelReason, setCancelReason] = useState('');
 
-  // Fetch appointments from API
+  // Initialize localStorage on component mount
   useEffect(() => {
-    fetchAppointments();
+    LocalStorageManager.initializeDefaultData();
   }, []);
-
-  const fetchAppointments = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/appointments?patientId=user123'); // In real app, get from auth context
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          setAppointments(result.data.appointments);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching appointments:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCancelAppointment = async (appointment: Appointment) => {
     setAppointmentToCancel(appointment);
@@ -81,32 +80,17 @@ export default function AppointmentsPage() {
 
     try {
       setCancellingAppointment(appointmentToCancel.id);
-      const response = await fetch(`/api/appointments/${appointmentToCancel.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          reason: cancelReason || 'No reason provided',
-          cancelledBy: 'patient'
-        }),
-      });
-
-      const result = await response.json();
+      
+      const result = await cancelAppointment(appointmentToCancel.id, cancelReason || 'No reason provided');
+      
       if (result.success) {
-        // Update the appointment in the state instead of refetching
-        setAppointments(prev => prev.map(apt => 
-          apt.id === appointmentToCancel.id 
-            ? { ...apt, status: 'cancelled', cancelledAt: new Date().toISOString() }
-            : apt
-        ));
         setShowCancelModal(false);
         setAppointmentToCancel(null);
         setCancelReason('');
         // Show success message
         alert('Appointment cancelled successfully');
       } else {
-        alert(result.message || 'Failed to cancel appointment');
+        alert(result.error || 'Failed to cancel appointment');
       }
     } catch (error) {
       console.error('Error cancelling appointment:', error);
@@ -140,13 +124,23 @@ export default function AppointmentsPage() {
     }
   };
 
-  const filteredAppointments = appointments.filter(appointment => {
+  const filteredAppointments = Array.isArray(appointments) ? appointments.filter(appointment => {
+    console.log('Filtering appointment:', {
+      id: appointment.id,
+      status: appointment.status,
+      selectedTab,
+      willShow: selectedTab === 'upcoming' ? appointment.status === 'confirmed' : (appointment.status === 'completed' || appointment.status === 'cancelled')
+    });
+    
     if (selectedTab === 'upcoming') {
-      return appointment.status === 'scheduled';
+      return appointment.status === 'confirmed';
     } else {
       return appointment.status === 'completed' || appointment.status === 'cancelled';
     }
-  });
+  }) : [];
+
+  console.log('All appointments:', appointments);
+  console.log('Filtered appointments for', selectedTab, ':', filteredAppointments);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -202,7 +196,7 @@ export default function AppointmentsPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Upcoming ({appointments.filter(a => a.status === 'scheduled').length})
+              Upcoming ({Array.isArray(appointments) ? appointments.filter(a => a.status === 'confirmed').length : 0})
             </button>
             <button
               onClick={() => setSelectedTab('past')}
@@ -212,7 +206,7 @@ export default function AppointmentsPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Past ({appointments.filter(a => a.status !== 'scheduled').length})
+              Past ({Array.isArray(appointments) ? appointments.filter(a => a.status !== 'confirmed').length : 0})
             </button>
           </div>
         </div>
@@ -263,7 +257,7 @@ export default function AppointmentsPage() {
                       <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(appointment.status)}`}>
                         {getStatusLabel(appointment.status)}
                       </span>
-                      {appointment.status === 'scheduled' && (
+                      {appointment.status === 'confirmed' && (
                         <div className="relative">
                           <button
                             onClick={() => setShowActionMenu(showActionMenu === appointment.id ? null : appointment.id)}
@@ -314,16 +308,8 @@ export default function AppointmentsPage() {
                     </div>
                     
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      {appointment.type === 'video' ? (
-                        <VideoCameraIcon className="w-4 h-4" />
-                      ) : (
-                        <MapPinIcon className="w-4 h-4" />
-                      )}
-                      <span>{appointment.type === 'video' ? 'Video Consultation' : appointment.doctor?.location || 'In-person consultation'}</span>
-                    </div>
-
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <span className="font-medium">Fee: ₹{appointment.consultationFee}</span>
+                      <MapPinIcon className="w-4 h-4" />
+                      <span>In-person consultation</span>
                     </div>
                   </div>
 

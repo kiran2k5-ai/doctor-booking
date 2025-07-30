@@ -89,11 +89,12 @@ export default function RescheduleAppointmentPage() {
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.data?.slots) {
-          const allSlots = [
-            ...(result.data.slots.morning || []),
-            ...(result.data.slots.afternoon || []),
-            ...(result.data.slots.evening || [])
-          ];
+          // Flatten the grouped slots into a single array with safe checks
+          const morning = Array.isArray(result.data.slots.morning) ? result.data.slots.morning : [];
+          const afternoon = Array.isArray(result.data.slots.afternoon) ? result.data.slots.afternoon : [];
+          const evening = Array.isArray(result.data.slots.evening) ? result.data.slots.evening : [];
+          
+          const allSlots = [...morning, ...afternoon, ...evening];
           setTimeSlots(allSlots);
           
           // Reset selected slot if it's not available on the new date

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useProfile } from '../../../lib/useProfile';
+import { LocalStorageManager } from '../../../lib/storage';
 import {
   UserCircleIcon,
   PencilIcon,
@@ -44,73 +46,53 @@ interface ProfileMenuItem {
 
 export default function ProfilePage() {
   const router = useRouter();
+  
+  // Use the new localStorage-enabled profile hook
+  const {
+    profile,
+    loading,
+    saving,
+    error,
+    updateProfile
+  } = useProfile('user123');
+  
   const [user, setUser] = useState<User | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [editForm, setEditForm] = useState<Partial<User>>({});
-  const [error, setError] = useState<string | null>(null);
+  const [activeModal, setActiveModal] = useState<string | null>(null);
 
+  // Update local state when profile changes
   useEffect(() => {
-    fetchUserProfile();
-  }, []);
-
-  const fetchUserProfile = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/profile?userId=user123');
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          setUser(result.data);
-          setEditForm(result.data);
-        } else {
-          setError('Failed to load profile');
-        }
-      } else {
-        setError('Failed to load profile');
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      setError('Failed to load profile');
-    } finally {
-      setLoading(false);
+    if (profile) {
+      setUser(profile);
+      setEditForm(profile);
     }
-  };
+  }, [profile]);
+
+  // Initialize localStorage on component mount
+  useEffect(() => {
+    LocalStorageManager.initializeDefaultData();
+  }, []);
 
   const saveProfile = async () => {
     try {
-      setSaving(true);
-      setError(null);
+      const result = await updateProfile(editForm);
       
-      const response = await fetch('/api/profile?userId=user123', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editForm),
-      });
-
-      const result = await response.json();
       if (result.success) {
-        setUser(result.data);
         setIsEditing(false);
         alert('Profile updated successfully!');
       } else {
-        setError(result.message || 'Failed to update profile');
+        alert(result.error || 'Failed to update profile');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      setError('Failed to update profile');
-    } finally {
-      setSaving(false);
+      alert('Failed to update profile');
     }
   };
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout?')) {
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
+      LocalStorageManager.logout();
       router.push('/login');
     }
   };
@@ -134,35 +116,35 @@ export default function ProfilePage() {
       id: 'medical-info',
       label: 'Medical Information',
       icon: <DocumentTextIcon className="w-6 h-6" />,
-      action: () => console.log('Medical info'),
+      action: () => setActiveModal('medical-info'),
       showChevron: true
     },
     {
       id: 'notifications',
       label: 'Notifications',
       icon: <BellIcon className="w-6 h-6" />,
-      action: () => console.log('Notifications'),
+      action: () => setActiveModal('notifications'),
       showChevron: true
     },
     {
       id: 'privacy',
       label: 'Privacy & Security',
       icon: <ShieldCheckIcon className="w-6 h-6" />,
-      action: () => console.log('Privacy'),
+      action: () => setActiveModal('privacy'),
       showChevron: true
     },
     {
       id: 'password',
       label: 'Change Password',
       icon: <LockClosedIcon className="w-6 h-6" />,
-      action: () => console.log('Change password'),
+      action: () => setActiveModal('change-password'),
       showChevron: true
     },
     {
       id: 'help',
       label: 'Help & Support',
       icon: <QuestionMarkCircleIcon className="w-6 h-6" />,
-      action: () => console.log('Help'),
+      action: () => setActiveModal('help'),
       showChevron: true
     },
     {
@@ -174,6 +156,258 @@ export default function ProfilePage() {
       color: 'text-red-600'
     }
   ];
+
+  // Modal components
+  const renderModal = () => {
+    switch (activeModal) {
+      case 'medical-info':
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
+              <div className="px-6 py-4 border-b">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Medical Information</h3>
+                  <button
+                    onClick={() => setActiveModal(null)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div className="px-6 py-4 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Blood Type</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500">
+                    <option value="">Select blood type</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Allergies</label>
+                  <textarea
+                    placeholder="List any allergies..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Contact</label>
+                  <input
+                    type="text"
+                    placeholder="Emergency contact name and phone"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t bg-gray-50 flex justify-end space-x-3">
+                <button
+                  onClick={() => setActiveModal(null)}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveModal(null);
+                    alert('Medical information saved!');
+                  }}
+                  className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'notifications':
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-md w-full">
+              <div className="px-6 py-4 border-b">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Notification Settings</h3>
+                  <button
+                    onClick={() => setActiveModal(null)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div className="px-6 py-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium text-gray-900">Appointment Reminders</h4>
+                    <p className="text-sm text-gray-600">Get notified about upcoming appointments</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" defaultChecked />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                  </label>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium text-gray-900">SMS Notifications</h4>
+                    <p className="text-sm text-gray-600">Receive SMS for important updates</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                  </label>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium text-gray-900">Email Notifications</h4>
+                    <p className="text-sm text-gray-600">Get email updates and newsletters</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" defaultChecked />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                  </label>
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t bg-gray-50 flex justify-end">
+                <button
+                  onClick={() => {
+                    setActiveModal(null);
+                    alert('Notification preferences saved!');
+                  }}
+                  className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600"
+                >
+                  Save Settings
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'change-password':
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-md w-full">
+              <div className="px-6 py-4 border-b">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Change Password</h3>
+                  <button
+                    onClick={() => setActiveModal(null)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div className="px-6 py-4 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                  <input
+                    type="password"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                  <input
+                    type="password"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                  <input
+                    type="password"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t bg-gray-50 flex justify-end space-x-3">
+                <button
+                  onClick={() => setActiveModal(null)}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveModal(null);
+                    alert('Password changed successfully!');
+                  }}
+                  className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600"
+                >
+                  Change Password
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'help':
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
+              <div className="px-6 py-4 border-b">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Help & Support</h3>
+                  <button
+                    onClick={() => setActiveModal(null)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div className="px-6 py-4 space-y-4">
+                <div className="space-y-3">
+                  <button className="w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <h4 className="font-medium text-gray-900">📞 Contact Support</h4>
+                    <p className="text-sm text-gray-600 mt-1">Call us at +1-800-DOCTOR</p>
+                  </button>
+                  <button className="w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <h4 className="font-medium text-gray-900">💬 Live Chat</h4>
+                    <p className="text-sm text-gray-600 mt-1">Chat with our support team</p>
+                  </button>
+                  <button className="w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <h4 className="font-medium text-gray-900">📧 Email Support</h4>
+                    <p className="text-sm text-gray-600 mt-1">support@doctorbooking.com</p>
+                  </button>
+                  <button className="w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <h4 className="font-medium text-gray-900">❓ FAQ</h4>
+                    <p className="text-sm text-gray-600 mt-1">Find answers to common questions</p>
+                  </button>
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t bg-gray-50 flex justify-end">
+                <button
+                  onClick={() => setActiveModal(null)}
+                  className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   if (!user || loading) {
     return (
@@ -192,7 +426,7 @@ export default function ProfilePage() {
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
           <button
-            onClick={fetchUserProfile}
+            onClick={() => window.location.reload()}
             className="bg-cyan-500 text-white px-4 py-2 rounded-lg hover:bg-cyan-600"
           >
             Retry
@@ -283,6 +517,39 @@ export default function ProfilePage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+              <input
+                type="date"
+                value={editForm.dateOfBirth || ''}
+                onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+              <select
+                value={editForm.gender || ''}
+                onChange={(e) => handleInputChange('gender', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+                <option value="prefer-not-to-say">Prefer not to say</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+              <textarea
+                value={editForm.address || ''}
+                onChange={(e) => handleInputChange('address', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 bg-white"
+                placeholder="Enter your address"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -368,6 +635,9 @@ export default function ProfilePage() {
           </button>
         ))}
       </div>
+      
+      {/* Render active modal */}
+      {activeModal && renderModal()}
     </div>
   );
 }
