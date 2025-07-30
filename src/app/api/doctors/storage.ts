@@ -45,6 +45,8 @@ export interface Appointment {
   consultationFee: number;
   notes?: string;
   createdAt: string;
+  updatedAt?: string;
+  cancelledAt?: string;
 }
 
 // Mock doctors data
@@ -213,7 +215,7 @@ export const mockAppointments: Appointment[] = [
   {
     id: 'apt-1',
     doctorId: '1',
-    patientId: 'patient-1',
+    patientId: 'user123',
     date: '2025-07-30',
     time: '10:30 AM',
     type: 'in-person',
@@ -221,6 +223,55 @@ export const mockAppointments: Appointment[] = [
     consultationFee: 500,
     notes: 'Regular checkup',
     createdAt: '2025-07-29T10:00:00Z'
+  },
+  {
+    id: 'apt-2',
+    doctorId: '2',
+    patientId: 'user123',
+    date: '2025-08-02',
+    time: '2:30 PM',
+    type: 'video',
+    status: 'scheduled',
+    consultationFee: 400,
+    notes: 'Follow-up consultation',
+    createdAt: '2025-07-29T14:00:00Z'
+  },
+  {
+    id: 'apt-3',
+    doctorId: '3',
+    patientId: 'user123',
+    date: '2025-07-25',
+    time: '9:00 AM',
+    type: 'in-person',
+    status: 'completed',
+    consultationFee: 450,
+    notes: 'Annual health checkup completed',
+    createdAt: '2025-07-24T09:00:00Z'
+  },
+  {
+    id: 'apt-4',
+    doctorId: '5',
+    patientId: 'user123',
+    date: '2025-07-20',
+    time: '3:00 PM',
+    type: 'in-person',
+    status: 'completed',
+    consultationFee: 600,
+    notes: 'Knee pain consultation completed',
+    createdAt: '2025-07-19T10:00:00Z'
+  },
+  {
+    id: 'apt-5',
+    doctorId: '4',
+    patientId: 'user123',
+    date: '2025-07-15',
+    time: '11:00 AM',
+    type: 'video',
+    status: 'cancelled',
+    consultationFee: 550,
+    notes: 'Cancelled due to emergency',
+    createdAt: '2025-07-14T08:00:00Z',
+    cancelledAt: '2025-07-15T09:00:00Z'
   }
 ];
 

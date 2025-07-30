@@ -58,9 +58,23 @@ export default function DoctorDetailPage() {
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [consultationType, setConsultationType] = useState<'in-person' | 'video'>('in-person');
+
+  const generateDateOptions = () => {
+    const dates = [];
+    const today = new Date();
+    
+    for (let i = 0; i < 14; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      dates.push(date);
+    }
+    
+    return dates;
+  };
 
   useEffect(() => {
     // Fetch doctor data from API
@@ -82,14 +96,28 @@ export default function DoctorDetailPage() {
       }
     };
 
-    // Fetch time slots for the doctor
+    if (doctorId) {
+      setLoading(true);
+      fetchDoctor().finally(() => setLoading(false));
+    }
+  }, [doctorId]);
+
+  // Separate useEffect for time slots to allow independent loading
+  useEffect(() => {
     const fetchTimeSlots = async () => {
+      if (!doctorId) return;
+      
       try {
+        setSlotsLoading(true);
+        setSelectedSlot(null); // Clear selected slot when date changes
+        
         const dateStr = selectedDate.toISOString().split('T')[0];
         const response = await fetch(`/api/doctors/${doctorId}/slots?date=${dateStr}`);
+        
         if (response.ok) {
           const result = await response.json();
           console.log('Time slots API response:', result); // Debug log
+          
           if (result.success && result.data && result.data.slots) {
             // Flatten the grouped slots into a single array
             const allSlots = [
@@ -99,7 +127,7 @@ export default function DoctorDetailPage() {
             ];
             setTimeSlots(allSlots);
           } else {
-            console.log('No time slots data found, using empty array');
+            console.log('No time slots data found:', result.message);
             setTimeSlots([]);
           }
         } else {
@@ -109,14 +137,12 @@ export default function DoctorDetailPage() {
       } catch (error) {
         console.error('Error fetching time slots:', error);
         setTimeSlots([]);
+      } finally {
+        setSlotsLoading(false);
       }
     };
     
-    if (doctorId) {
-      setLoading(true);
-      Promise.all([fetchDoctor(), fetchTimeSlots()])
-        .finally(() => setLoading(false));
-    }
+    fetchTimeSlots();
   }, [doctorId, selectedDate]);
 
   const renderStars = (rating: number) => {
@@ -144,27 +170,50 @@ export default function DoctorDetailPage() {
     return timeSlots.filter(slot => slot.type === type);
   };
 
-  const handleBookAppointment = () => {
+  const handleBookAppointment = async () => {
     if (!selectedSlot) {
       alert('Please select a time slot');
       return;
     }
 
-    // In real app, make API call to book appointment
-    const appointmentData = {
-      doctorId: doctor?.id,
-      doctorName: doctor?.name,
-      date: selectedDate.toISOString().split('T')[0],
-      time: timeSlots.find(slot => slot.id === selectedSlot)?.time,
-      type: consultationType,
-      fee: doctor?.consultationFee
-    };
+    try {
+      setLoading(true);
+      
+      // Prepare appointment data
+      const appointmentData = {
+        doctorId: doctor?.id,
+        patientId: 'user123', // In real app, get from authentication context
+        date: selectedDate.toISOString().split('T')[0],
+        time: timeSlots.find(slot => slot.id === selectedSlot)?.time,
+        type: consultationType,
+        notes: ''
+      };
 
-    console.log('Booking appointment:', appointmentData);
-    
-    // Show success message and redirect
-    alert('Appointment booked successfully!');
-    router.push('/patient-dashboard/appointments');
+      // Make API call to book appointment
+      const response = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(appointmentData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Show success message and redirect
+        alert('Appointment booked successfully!');
+        router.push('/patient-dashboard/appointments');
+      } else {
+        // Handle error
+        alert(result.message || 'Failed to book appointment');
+      }
+    } catch (error) {
+      console.error('Error booking appointment:', error);
+      alert('Failed to book appointment. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading || !doctor) {
@@ -327,24 +376,68 @@ export default function DoctorDetailPage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Time Slots</h3>
           
           {/* Date Selection */}
-          <div className="flex items-center space-x-2 mb-4">
-            <CalendarDaysIcon className="w-5 h-5 text-gray-600" />
-            <span className="text-sm font-medium text-gray-900">
-              {selectedDate.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+          <div className="mb-6">
+            <h4 className="font-medium text-gray-900 mb-3">Select Date</h4>
+            <div className="grid grid-cols-7 gap-2">
+              {generateDateOptions().map((date, index) => {
+                const isSelected = selectedDate.toDateString() === date.toDateString();
+                const isToday = date.toDateString() === new Date().toDateString();
+                
+                return (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedDate(date)}
+                    disabled={slotsLoading}
+                    className={`p-3 rounded-lg text-center transition-colors ${
+                      isSelected
+                        ? 'bg-cyan-500 text-white'
+                        : slotsLoading
+                        ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                        : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                    } ${isToday ? 'ring-2 ring-cyan-200' : ''}`}
+                  >
+                    <div className="text-xs">{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                    <div className="font-medium">{date.getDate()}</div>
+                    {isToday && <div className="text-xs text-cyan-600">Today</div>}
+                  </button>
+                );
               })}
-            </span>
+            </div>
+          </div>
+          
+          {/* Current Date Display */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <CalendarDaysIcon className="w-5 h-5 text-gray-600" />
+              <span className="text-sm font-medium text-gray-900">
+                {selectedDate.toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </span>
+            </div>
+            {slotsLoading && (
+              <div className="flex items-center space-x-2 text-sm text-gray-500">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-500"></div>
+                <span>Loading slots...</span>
+              </div>
+            )}
           </div>
           
           {/* Morning Slots */}
           <div className="mb-6">
             <h4 className="font-medium text-gray-900 mb-3">Morning</h4>
-            <div className="grid grid-cols-3 gap-2">
-              {getSlotsByType('morning').length > 0 ? (
-                getSlotsByType('morning').map((slot) => (
+            {slotsLoading ? (
+              <div className="grid grid-cols-3 gap-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse"></div>
+                ))}
+              </div>
+            ) : getSlotsByType('morning').length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {getSlotsByType('morning').map((slot) => (
                   <button
                     key={slot.id}
                     onClick={() => slot.available && setSelectedSlot(slot.id)}
@@ -359,21 +452,26 @@ export default function DoctorDetailPage() {
                   >
                     {slot.time}
                   </button>
-                ))
-              ) : (
-                <div className="col-span-3 text-center py-4 text-gray-500 text-sm">
-                  No morning slots available
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                <p className="text-sm">No morning slots available</p>
+              </div>
+            )}
           </div>
-
           {/* Afternoon Slots */}
           <div className="mb-6">
             <h4 className="font-medium text-gray-900 mb-3">Afternoon</h4>
-            <div className="grid grid-cols-3 gap-2">
-              {getSlotsByType('afternoon').length > 0 ? (
-                getSlotsByType('afternoon').map((slot) => (
+            {slotsLoading ? (
+              <div className="grid grid-cols-3 gap-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse"></div>
+                ))}
+              </div>
+            ) : getSlotsByType('afternoon').length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {getSlotsByType('afternoon').map((slot) => (
                   <button
                     key={slot.id}
                     onClick={() => slot.available && setSelectedSlot(slot.id)}
@@ -388,21 +486,27 @@ export default function DoctorDetailPage() {
                   >
                     {slot.time}
                   </button>
-                ))
-              ) : (
-                <div className="col-span-3 text-center py-4 text-gray-500 text-sm">
-                  No afternoon slots available
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                <p className="text-sm">No afternoon slots available</p>
+              </div>
+            )}
           </div>
 
           {/* Evening Slots */}
           <div className="mb-6">
             <h4 className="font-medium text-gray-900 mb-3">Evening</h4>
-            <div className="grid grid-cols-3 gap-2">
-              {getSlotsByType('evening').length > 0 ? (
-                getSlotsByType('evening').map((slot) => (
+            {slotsLoading ? (
+              <div className="grid grid-cols-3 gap-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse"></div>
+                ))}
+              </div>
+            ) : getSlotsByType('evening').length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {getSlotsByType('evening').map((slot) => (
                   <button
                     key={slot.id}
                     onClick={() => slot.available && setSelectedSlot(slot.id)}
@@ -417,14 +521,28 @@ export default function DoctorDetailPage() {
                   >
                     {slot.time}
                   </button>
-                ))
-              ) : (
-                <div className="col-span-3 text-center py-4 text-gray-500 text-sm">
-                  No evening slots available
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                <p className="text-sm">No evening slots available</p>
+              </div>
+            )}
           </div>
+          
+          {/* No slots available message */}
+          {!slotsLoading && timeSlots.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <CalendarDaysIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p className="text-lg font-medium mb-2">No appointments available</p>
+              <p className="text-sm text-gray-400">
+                Doctor may not be available on this date or all slots are booked
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                Please try selecting a different date
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

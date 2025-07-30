@@ -28,13 +28,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate 4-digit OTP
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    // In development, allow bypass with fixed OTP for testing
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const otp = isDevelopment && contact === 'test@example.com' 
+      ? '1234' 
+      : Math.floor(1000 + Math.random() * 9000).toString();
     
     // Store OTP with 5-minute expiry
     const expires = Date.now() + 5 * 60 * 1000; // 5 minutes
     otpStorage.set(contact, { otp, expires, userId: user.id });
 
     console.log(`OTP for ${contact}: ${otp}`); // In production, send via SMS/Email
+    
+    // TODO: In production, replace with actual SMS/Email service
+    // Example SMS integration:
+    // if (!contact.includes('@')) {
+    //   await sendSMS(contact, `Your doctor booking OTP is: ${otp}. Valid for 5 minutes.`);
+    // } else {
+    //   await sendEmail(contact, 'OTP Verification', `Your OTP is: ${otp}`);
+    // }
+    
+    // For now, in development, users can see OTP in browser console or use test OTP: 1234
 
     return NextResponse.json({
       message: 'OTP sent successfully',
