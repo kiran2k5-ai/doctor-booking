@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [contact, setContact] = useState('');
-  // Demo credentials
-  const demoPatient = { contact: 'patient@example.com', otp: '111111' };
-  const demoDoctor = { contact: '+911234567890', otp: '222222' };
+  // Demo credentials (match backend)
+  const demoPatient = { contact: '9042222856', otp: '1234' };
+  const demoDoctor = { contact: '9876543210', otp: '1234' };
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -30,6 +30,23 @@ export default function LoginPage() {
 
       if (!response.ok) {
         throw new Error(data.error || 'Login failed');
+      }
+
+      // For demo numbers, skip OTP and go directly to dashboard
+      if (contact === demoPatient.contact) {
+        localStorage.setItem('authToken', 'demo-patient-token');
+        localStorage.setItem('userType', 'patient');
+        localStorage.setItem('userData', JSON.stringify({ phone: demoPatient.contact }));
+        router.push('/patient-dashboard');
+        return;
+      }
+      if (contact === demoDoctor.contact) {
+        localStorage.setItem('authToken', 'demo-doctor-token');
+        localStorage.setItem('userType', 'doctor');
+        // Store both id and phone for demo doctor
+        localStorage.setItem('userData', JSON.stringify({ id: '1', phone: demoDoctor.contact }));
+        router.push('/doctor-dashboard');
+        return;
       }
 
       // Store enhanced login data for OTP verification
@@ -67,7 +84,7 @@ export default function LoginPage() {
                 setTimeout(() => handleSubmit(undefined, demoPatient.otp), 200);
               }}
             >
-              Demo Patient Login (username: {demoPatient.contact}, OTP: {demoPatient.otp})
+              Demo Patient Login (Mobile: <span className="font-mono">{demoPatient.contact}</span>, OTP: <span className="font-mono">{demoPatient.otp}</span>)
             </button>
             <button
               type="button"
@@ -77,7 +94,7 @@ export default function LoginPage() {
                 setTimeout(() => handleSubmit(undefined, demoDoctor.otp), 200);
               }}
             >
-              Demo Doctor Login (doctor: {demoDoctor.contact}, OTP: {demoDoctor.otp})
+              Demo Doctor Login (Mobile: <span className="font-mono">{demoDoctor.contact}</span>, OTP: <span className="font-mono">{demoDoctor.otp}</span>)
             </button>
           </div>
 

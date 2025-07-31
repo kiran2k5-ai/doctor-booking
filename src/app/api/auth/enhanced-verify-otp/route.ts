@@ -1,3 +1,5 @@
+// Global set to store verified auth tokens for demo session validation
+export const verifiedAuthTokens = new Set<string>();
 // Enhanced OTP verification for both doctors and patients
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -17,27 +19,47 @@ export async function POST(request: NextRequest) {
     try {
       otpData = JSON.parse(Buffer.from(tempToken, 'base64').toString());
     } catch {
+      console.error('OTP VERIFY: Invalid tempToken received:', tempToken);
       return NextResponse.json({
         success: false,
         error: 'Invalid token'
       }, { status: 400 });
     }
 
-    // Check if OTP is expired
+    // Debug log for OTP expiry
+    console.log('OTP VERIFY: Checking OTP for phone:', otpData.phone, 'Expires at:', new Date(otpData.expiresAt).toLocaleString(), 'Current time:', new Date().toLocaleString());
+
+    // Check if OTP is expired (from tempToken)
     if (Date.now() > otpData.expiresAt) {
+      console.error('OTP VERIFY: TempToken expired for phone:', otpData.phone);
       return NextResponse.json({
         success: false,
         error: 'OTP has expired'
       }, { status: 400 });
     }
 
-    // Verify OTP (in demo, accept any 6-digit number)
-    if (otp.length !== 6) {
+    // Import OTP store from login route (correct relative path)
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { otpStore } = require('../enhanced-login/route');
+    const stored = otpStore[otpData.phone];
+    console.log('OTP VERIFY: OTP store entry for phone:', otpData.phone, stored);
+    if (!stored || Date.now() > stored.expiresAt) {
+      console.error('OTP VERIFY: OTP store expired or missing for phone:', otpData.phone, stored);
       return NextResponse.json({
         success: false,
-        error: 'Invalid OTP'
+        error: 'OTP has expired. Please request a new one.'
       }, { status: 400 });
     }
+    if (stored.otp !== otp) {
+      console.error('OTP VERIFY: Incorrect OTP for phone:', otpData.phone, 'Expected:', stored.otp, 'Received:', otp);
+      return NextResponse.json({
+        success: false,
+        error: 'Incorrect OTP. Please try again.'
+      }, { status: 400 });
+    }
+
+    // OTP is valid, remove from store
+    delete otpStore[otpData.phone];
 
     // Generate auth token
     const authToken = Buffer.from(JSON.stringify({
@@ -47,6 +69,9 @@ export async function POST(request: NextRequest) {
       userData: otpData.userData,
       loginTime: Date.now()
     })).toString('base64');
+
+    // Store the verified token for session validation in appointments route
+    verifiedAuthTokens.add(authToken);
 
     return NextResponse.json({
       success: true,

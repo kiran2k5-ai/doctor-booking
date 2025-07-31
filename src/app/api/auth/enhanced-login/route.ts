@@ -40,6 +40,10 @@ const mockDoctors = [
   }
 ];
 
+
+// In-memory OTP store (for demo; use Redis/db in production)
+export const otpStore: Record<string, { otp: string; expiresAt: number; attempts: number }> = {};
+
 // Function to identify user type
 function getUserType(phone: string) {
   const doctor = mockDoctors.find(doc => doc.phone === phone);
@@ -63,20 +67,44 @@ export async function POST(request: NextRequest) {
     // Identify user type
     const userInfo = getUserType(phone);
     
-    // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    // Store OTP temporarily (in production, use Redis or database)
-    const otpData = {
-      phone,
+
+
+    // Demo numbers (patient and all demo doctors) always get OTP 1234 and bypass rate limit
+    const demoNumbers = [
+      '9042222856', // demo patient
+      '9876543210', '9876543211', '9876543212', '9876543213', '9876543214' // demo doctors
+    ];
+    const now = Date.now();
+    let otp = Math.floor(1000 + Math.random() * 9000).toString();
+    if (demoNumbers.includes(phone)) {
+      otp = '1234';
+      // No rate limit for demo numbers
+    } else {
+      // Rate limit: max 5 OTPs per 10 minutes per contact
+      if (otpStore[phone] && otpStore[phone].attempts >= 5 && now - otpStore[phone].expiresAt < 10 * 60 * 1000) {
+        return NextResponse.json({
+          success: false,
+          error: 'Too many OTP requests. Please try again later.'
+        }, { status: 429 });
+      }
+    }
+    const expiresAt = now + 15 * 60 * 1000; // 15 minutes
+    otpStore[phone] = {
       otp,
-      userType: userInfo.type,
-      userData: userInfo.data,
-      expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes
+      expiresAt,
+      attempts: (otpStore[phone]?.attempts || 0) + 1
     };
 
     // In production, send SMS here
-    console.log(`OTP for ${phone} (${userInfo.type}): ${otp}`);
+    console.log(`OTP for ${phone} (${userInfo.type}): ${otp} (expires at ${new Date(expiresAt).toLocaleString()})`);
+
+    // Only store user info in tempToken, not OTP
+    const otpData = {
+      phone,
+      userType: userInfo.type,
+      userData: userInfo.data,
+      expiresAt: otpStore[phone].expiresAt
+    };
 
     return NextResponse.json({
       success: true,

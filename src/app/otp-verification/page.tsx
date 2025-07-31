@@ -5,7 +5,7 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 
 export default function OTPVerificationPage() {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '']);
   const [resendCountdown, setResendCountdown] = useState(55);
   const [contact, setContact] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -17,12 +17,46 @@ export default function OTPVerificationPage() {
     const tempToken = sessionStorage.getItem('tempToken');
     const userType = sessionStorage.getItem('userType');
     const storedContact = sessionStorage.getItem('loginPhone');
-    
+    const demoPatient = '9042222856';
+    // All demo doctor numbers from backend
+    const demoDoctors = [
+      '9876543210',
+      '9876543211',
+      '9876543212',
+      '9876543213',
+      '9876543214',
+    ];
     if (!tempToken || !storedContact) {
       router.push('/login');
       return;
     }
     setContact(storedContact);
+
+    // If demo patient, skip OTP and go to patient dashboard
+    if (storedContact === demoPatient) {
+      localStorage.setItem('authToken', 'demo-patient-token');
+      localStorage.setItem('userType', 'patient');
+      localStorage.setItem('userData', JSON.stringify({ phone: demoPatient }));
+      router.push('/patient-dashboard');
+      return;
+    }
+    // If any demo doctor, skip OTP and go to doctor dashboard
+    if (demoDoctors.includes(storedContact)) {
+      localStorage.setItem('authToken', 'demo-doctor-token');
+      localStorage.setItem('userType', 'doctor');
+      // Store both id and phone for demo doctor (id '1' for main demo doctor)
+      let demoId = '1';
+      switch (storedContact) {
+        case '9876543210': demoId = '1'; break;
+        case '9876543211': demoId = '2'; break;
+        case '9876543212': demoId = '3'; break;
+        case '9876543213': demoId = '4'; break;
+        case '9876543214': demoId = '5'; break;
+      }
+      localStorage.setItem('userData', JSON.stringify({ id: demoId, phone: storedContact }));
+      router.push('/doctor-dashboard');
+      return;
+    }
 
     const timer = setInterval(() => {
       setResendCountdown((prev) => {
@@ -39,7 +73,7 @@ export default function OTPVerificationPage() {
 
   const handleVerifyOTP = async () => {
     const otpString = otp.join('');
-    if (otpString.length !== 6) {
+    if (otpString.length !== 4) {
       setError('Please enter complete OTP');
       return;
     }
@@ -188,19 +222,20 @@ export default function OTPVerificationPage() {
             )}
 
             <div className="flex justify-center space-x-4 mb-8">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  id={`otp-${index}`}
-                  type="text"
-                  value={digit}
-                  onChange={(e) => handleOtpChange(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-12 h-12 text-center text-xl font-semibold text-gray-900 border-2 border-gray-300 rounded-lg focus:border-cyan-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  maxLength={1}
-                  disabled={isSuccess}
-                />
-              ))}
+            {otp.map((digit, index) => (
+              <input
+                key={index}
+                id={`otp-${index}`}
+                type="text"
+                value={digit}
+                onChange={(e) => handleOtpChange(index, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(index, e)}
+                className="w-12 h-12 text-center text-xl font-semibold text-gray-900 border-2 border-gray-300 rounded-lg focus:border-cyan-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                maxLength={1}
+                disabled={isSuccess}
+                autoComplete="one-time-code"
+              />
+            ))}
             </div>
 
             <p className="text-sm text-gray-600 mb-8">

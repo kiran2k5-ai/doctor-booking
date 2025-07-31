@@ -82,13 +82,33 @@ export async function GET(request: NextRequest) {
 
 // POST /api/appointments - Book a new appointment
 export async function POST(request: NextRequest) {
-  try {
-    const appointmentData = await request.json();
 
+  try {
+    // --- OTP/auth verification ---
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'Missing or invalid authorization token. Please verify OTP.'
+      }, { status: 401 });
+    }
+    const authToken = authHeader.replace('Bearer ', '').trim();
+    // For demo: check if token exists in a global in-memory store (set by OTP verification)
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { verifiedAuthTokens } = require('../auth/enhanced-verify-otp/route');
+    if (!verifiedAuthTokens || !verifiedAuthTokens.has(authToken)) {
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'Invalid or expired session. Please verify OTP.'
+      }, { status: 401 });
+    }
+
+    const appointmentData = await request.json();
     // Validate required fields
     const requiredFields = ['doctorId', 'patientId', 'date', 'time', 'type'];
     const missingFields = requiredFields.filter(field => !appointmentData[field]);
-
     if (missingFields.length > 0) {
       return NextResponse.json({
         success: false,
