@@ -106,23 +106,7 @@ export default function AppointmentsPage() {
     setShowActionMenu(null);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'scheduled': return 'text-blue-600 bg-blue-50 border-blue-200';
-      case 'completed': return 'text-green-600 bg-green-50 border-green-200';
-      case 'cancelled': return 'text-red-600 bg-red-50 border-red-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'scheduled': return 'Upcoming';
-      case 'completed': return 'Completed';
-      case 'cancelled': return 'Cancelled';
-      default: return status;
-    }
-  };
+  // Removed status color and label for patient dashboard as per request
 
   const filteredAppointments = Array.isArray(appointments) ? appointments.filter(appointment => {
     console.log('Filtering appointment:', {
@@ -254,9 +238,7 @@ export default function AppointmentsPage() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(appointment.status)}`}>
-                        {getStatusLabel(appointment.status)}
-                      </span>
+                      {/* Status label removed as per request */}
                       {appointment.status === 'confirmed' && (
                         <div className="relative">
                           <button

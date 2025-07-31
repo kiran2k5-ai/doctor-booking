@@ -41,8 +41,7 @@ const mockDoctors = [
 ];
 
 
-// In-memory OTP store (for demo; use Redis/db in production)
-export const otpStore: Record<string, { otp: string; expiresAt: number; attempts: number }> = {};
+
 
 // Function to identify user type
 function getUserType(phone: string) {
@@ -55,62 +54,43 @@ function getUserType(phone: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { phone } = await request.json();
+    const { phone, password } = await request.json();
 
-    if (!phone) {
+    if (!phone || !password) {
       return NextResponse.json({
         success: false,
-        error: 'Phone number is required'
+        error: 'Phone number and password are required'
       }, { status: 400 });
     }
 
-    // Identify user type
-    const userInfo = getUserType(phone);
-    
-
-
-    // Demo numbers (patient and all demo doctors) always get OTP 1234 and bypass rate limit
-    const demoNumbers = [
-      '9042222856', // demo patient
-      '9876543210', '9876543211', '9876543212', '9876543213', '9876543214' // demo doctors
+    // Demo users (for development)
+    const demoUsers = [
+      { type: 'patient', phone: '9042222856', password: 'patient123', userData: { phone: '9042222856' } },
+      { type: 'doctor', phone: '9876543210', password: 'doctor123', userData: { id: '1', phone: '9876543210', name: 'Dr. Prakash Das', specialization: 'Psychologist', email: 'prakash.das@hospital.com' } },
+      { type: 'doctor', phone: '9876543211', password: 'doctor123', userData: { id: '2', phone: '9876543211', name: 'Dr. Sarah Wilson', specialization: 'Cardiologist', email: 'sarah.wilson@hospital.com' } },
+      { type: 'doctor', phone: '9876543212', password: 'doctor123', userData: { id: '3', phone: '9876543212', name: 'Dr. Michael Chen', specialization: 'Dermatologist', email: 'michael.chen@hospital.com' } },
+      { type: 'doctor', phone: '9876543213', password: 'doctor123', userData: { id: '4', phone: '9876543213', name: 'Dr. Emily Rodriguez', specialization: 'Pediatrician', email: 'emily.rodriguez@hospital.com' } },
+      { type: 'doctor', phone: '9876543214', password: 'doctor123', userData: { id: '5', phone: '9876543214', name: 'Dr. James Park', specialization: 'Orthopedic', email: 'james.park@hospital.com' } },
     ];
-    const now = Date.now();
-    let otp = Math.floor(1000 + Math.random() * 9000).toString();
-    if (demoNumbers.includes(phone)) {
-      otp = '1234';
-      // No rate limit for demo numbers
-    } else {
-      // Rate limit: max 5 OTPs per 10 minutes per contact
-      if (otpStore[phone] && otpStore[phone].attempts >= 5 && now - otpStore[phone].expiresAt < 10 * 60 * 1000) {
-        return NextResponse.json({
-          success: false,
-          error: 'Too many OTP requests. Please try again later.'
-        }, { status: 429 });
-      }
+
+    const found = demoUsers.find(u => u.phone === phone && u.password === password);
+    if (!found) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid phone or password'
+      }, { status: 401 });
     }
-    const expiresAt = now + 15 * 60 * 1000; // 15 minutes
-    otpStore[phone] = {
-      otp,
-      expiresAt,
-      attempts: (otpStore[phone]?.attempts || 0) + 1
-    };
 
-    // In production, send SMS here
-    console.log(`OTP for ${phone} (${userInfo.type}): ${otp} (expires at ${new Date(expiresAt).toLocaleString()})`);
-
-    // Only store user info in tempToken, not OTP
-    const otpData = {
-      phone,
-      userType: userInfo.type,
-      userData: userInfo.data,
-      expiresAt: otpStore[phone].expiresAt
-    };
+    // Simulate auth token
+    const authToken = `${found.type}-demo-token`;
+    const redirectUrl = found.type === 'doctor' ? '/doctor-dashboard' : '/patient-dashboard';
 
     return NextResponse.json({
       success: true,
-      message: `OTP sent to ${phone}`,
-      userType: userInfo.type,
-      tempToken: Buffer.from(JSON.stringify(otpData)).toString('base64')
+      authToken,
+      userType: found.type,
+      userData: found.userData,
+      redirectUrl
     });
 
   } catch (error) {

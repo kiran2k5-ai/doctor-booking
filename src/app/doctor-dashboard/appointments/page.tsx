@@ -12,6 +12,10 @@ import {
   XCircleIcon,
   EllipsisVerticalIcon
 } from '@heroicons/react/24/outline';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
+import { useRef } from 'react';
+import { parseISO } from 'date-fns';
 
 interface Appointment {
   id: string;
@@ -36,6 +40,9 @@ export default function DoctorAppointments() {
   const [loading, setLoading] = useState(true);
   const [doctorId, setDoctorId] = useState<string>('');
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [showCalendar, setShowCalendar] = useState(false);
+
 
   useEffect(() => {
     const userData = localStorage.getItem('userData');
@@ -43,6 +50,11 @@ export default function DoctorAppointments() {
       const parsed = JSON.parse(userData);
       setDoctorId(parsed.id);
       loadAppointments(parsed.id);
+      // Poll for new appointments every 10 seconds
+      const interval = setInterval(() => {
+        loadAppointments(parsed.id);
+      }, 10000);
+      return () => clearInterval(interval);
     }
   }, []);
 
@@ -123,7 +135,21 @@ export default function DoctorAppointments() {
     }
   };
 
-  const filteredAppointments = getFilteredAppointments();
+  // If a date is selected in calendar, filter to that date, else use tab logic
+  const filteredAppointments = selectedDate
+    ? appointments.filter(a => a.date === selectedDate.toISOString().split('T')[0])
+    : getFilteredAppointments();
+
+  // Mark days with appointments
+  const tileContent = ({ date, view }: { date: Date; view: string }) => {
+    if (view === 'month') {
+      const hasAppointment = appointments.some(a => a.date === date.toISOString().split('T')[0]);
+      if (hasAppointment) {
+        return <div className="flex justify-center mt-1"><span className="w-2 h-2 bg-cyan-400 rounded-full inline-block"></span></div>;
+      }
+    }
+    return null;
+  };
 
   if (loading) {
     return (
@@ -135,6 +161,70 @@ export default function DoctorAppointments() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Calendar Button and Modal */}
+      <div className="px-4 pt-6">
+        <button
+          className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium py-2 px-4 rounded-lg shadow mb-4"
+          onClick={() => setShowCalendar(true)}
+        >
+          Show Calendar
+        </button>
+        {showCalendar && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+            <div className="bg-white rounded-lg shadow-lg p-6 relative w-full max-w-md mx-auto">
+              <button
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl font-bold"
+                onClick={() => setShowCalendar(false)}
+                aria-label="Close Calendar"
+              >
+                ×
+              </button>
+              <style>{`
+                .react-calendar__tile {
+                  color: #111 !important;
+                  font-weight: 500;
+                }
+                .react-calendar__month-view__days__day--neighboringMonth {
+                  color: #d1d5db !important;
+                }
+                .react-calendar__tile--active,
+                .react-calendar__tile--now.react-calendar__tile--active {
+                  background: #22d3ee !important;
+                  color: #111 !important;
+                  border-radius: 0.5rem !important;
+                  box-shadow: 0 0 0 2px #06b6d4;
+                }
+                .react-calendar__tile--active:focus {
+                  outline: 2px solid #06b6d4;
+                }
+                .react-calendar__month-view__weekdays__weekday,
+                .react-calendar__navigation__label,
+                .react-calendar__navigation button {
+                  color: #111 !important;
+                  font-weight: 600;
+                }
+              `}</style>
+              <Calendar
+                onChange={date => {
+                  setSelectedDate(date as Date);
+                }}
+                value={selectedDate}
+                tileContent={tileContent}
+                calendarType="iso8601"
+                className="rounded-lg shadow border border-gray-200 w-full"
+              />
+              {selectedDate && (
+                <button
+                  className="mt-4 text-cyan-500 underline text-sm"
+                  onClick={() => setSelectedDate(null)}
+                >
+                  Clear Date Filter
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="px-4 py-4">

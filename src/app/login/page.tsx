@@ -6,13 +6,12 @@ import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [contact, setContact] = useState('');
-  // Demo credentials (match backend)
-  const demoPatient = { contact: '9042222856', otp: '1234' };
-  const demoDoctor = { contact: '9876543210', otp: '1234' };
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
-  const handleSubmit = async (e?: React.FormEvent, demoOtp?: string) => {
+
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setIsLoading(true);
     setError('');
@@ -23,7 +22,7 @@ export default function LoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ phone: contact }),
+        body: JSON.stringify({ phone: contact, password }),
       });
 
       const data = await response.json();
@@ -32,32 +31,11 @@ export default function LoginPage() {
         throw new Error(data.error || 'Login failed');
       }
 
-      // For demo numbers, skip OTP and go directly to dashboard
-      if (contact === demoPatient.contact) {
-        localStorage.setItem('authToken', 'demo-patient-token');
-        localStorage.setItem('userType', 'patient');
-        localStorage.setItem('userData', JSON.stringify({ phone: demoPatient.contact }));
-        router.push('/patient-dashboard');
-        return;
-      }
-      if (contact === demoDoctor.contact) {
-        localStorage.setItem('authToken', 'demo-doctor-token');
-        localStorage.setItem('userType', 'doctor');
-        // Store both id and phone for demo doctor
-        localStorage.setItem('userData', JSON.stringify({ id: '1', phone: demoDoctor.contact }));
-        router.push('/doctor-dashboard');
-        return;
-      }
-
-      // Store enhanced login data for OTP verification
-      sessionStorage.setItem('tempToken', data.tempToken);
-      sessionStorage.setItem('userType', data.userType);
-      sessionStorage.setItem('loginPhone', contact);
-      if (demoOtp) {
-        sessionStorage.setItem('demoOtp', demoOtp);
-      }
-      // Navigate to OTP verification
-      router.push('/otp-verification');
+      // Save auth data and redirect
+      localStorage.setItem('authToken', data.authToken);
+      localStorage.setItem('userType', data.userType);
+      localStorage.setItem('userData', JSON.stringify(data.userData));
+      router.push(data.redirectUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -74,29 +52,7 @@ export default function LoginPage() {
             <p className="text-gray-600 text-sm">Too Scheduled</p>
           </div>
 
-          {/* Demo login buttons */}
-          <div className="mb-4 flex flex-col gap-2">
-            <button
-              type="button"
-              className="w-full bg-cyan-100 hover:bg-cyan-200 text-cyan-700 font-medium py-2 px-4 rounded-lg transition duration-200"
-              onClick={() => {
-                setContact(demoPatient.contact);
-                setTimeout(() => handleSubmit(undefined, demoPatient.otp), 200);
-              }}
-            >
-              Demo Patient Login (Mobile: <span className="font-mono">{demoPatient.contact}</span>, OTP: <span className="font-mono">{demoPatient.otp}</span>)
-            </button>
-            <button
-              type="button"
-              className="w-full bg-cyan-100 hover:bg-cyan-200 text-cyan-700 font-medium py-2 px-4 rounded-lg transition duration-200"
-              onClick={() => {
-                setContact(demoDoctor.contact);
-                setTimeout(() => handleSubmit(undefined, demoDoctor.otp), 200);
-              }}
-            >
-              Demo Doctor Login (Mobile: <span className="font-mono">{demoDoctor.contact}</span>, OTP: <span className="font-mono">{demoDoctor.otp}</span>)
-            </button>
-          </div>
+
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
@@ -107,7 +63,7 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="contact" className="block text-sm font-medium text-gray-700 mb-2">
-                Mobile / Email
+                Mobile Number
               </label>
               <input
                 id="contact"
@@ -115,14 +71,25 @@ export default function LoginPage() {
                 type="text"
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
-                placeholder="Login with email or mobile number"
+                placeholder="Enter your mobile number"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm text-gray-900 placeholder-gray-400 bg-white"
                 required
               />
-              <div className="text-xs text-gray-500 mt-1">
-                Demo Patient: <span className="font-mono">{demoPatient.contact}</span> | OTP: <span className="font-mono">{demoPatient.otp}</span><br />
-                Demo Doctor: <span className="font-mono">{demoDoctor.contact}</span> | OTP: <span className="font-mono">{demoDoctor.otp}</span>
-              </div>
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm text-gray-900 placeholder-gray-400 bg-white"
+                required
+              />
             </div>
 
             <div className="flex items-center justify-between">
@@ -147,10 +114,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={isLoading || !contact.trim()}
+              disabled={isLoading || !contact.trim() || !password.trim()}
               className="w-full bg-cyan-400 hover:bg-cyan-500 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition duration-200"
             >
-              {isLoading ? 'Sending OTP...' : 'Login'}
+              {isLoading ? 'Logging in...' : 'Login'}
             </button>
 
             <div className="relative">

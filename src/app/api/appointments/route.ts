@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { bookAppointment, mockAppointments, findDoctorById } from '../doctors/storage';
+import { createClient } from '@supabase/supabase-js';
 
 // Helper function to get appointments from request headers (localStorage data)
 function getAppointmentsFromClient(request: NextRequest) {
@@ -80,164 +80,37 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/appointments - Book a new appointment
+// POST /api/appointments - Book a new appointment (Supabase version)
 export async function POST(request: NextRequest) {
-
   try {
-    // --- OTP/auth verification ---
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({
-        success: false,
-        error: 'Unauthorized',
-        message: 'Missing or invalid authorization token. Please verify OTP.'
-      }, { status: 401 });
-    }
-    const authToken = authHeader.replace('Bearer ', '').trim();
-    // For demo: check if token exists in a global in-memory store (set by OTP verification)
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { verifiedAuthTokens } = require('../auth/enhanced-verify-otp/route');
-    if (!verifiedAuthTokens || !verifiedAuthTokens.has(authToken)) {
-      return NextResponse.json({
-        success: false,
-        error: 'Unauthorized',
-        message: 'Invalid or expired session. Please verify OTP.'
-      }, { status: 401 });
-    }
-
-    const appointmentData = await request.json();
-    // Validate required fields
-    const requiredFields = ['doctorId', 'patientId', 'date', 'time', 'type'];
-    const missingFields = requiredFields.filter(field => !appointmentData[field]);
-    if (missingFields.length > 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Validation error',
-        message: `Missing required fields: ${missingFields.join(', ')}`
-      }, { status: 400 });
-    }
-
-    // Check if doctor exists
-    const doctor = findDoctorById(appointmentData.doctorId);
-    if (!doctor) {
-      return NextResponse.json({
-        success: false,
-        error: 'Not found',
-        message: 'Doctor not found'
-      }, { status: 404 });
-    }
-
-
-    // Check if doctor is available on this date (not marked unavailable)
-    // (Assume doctorAvailability is imported or accessible here)
-
-    // Import doctorAvailability directly
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { doctorAvailability } = require('../doctor/availability/route');
-    const availRecord = doctorAvailability?.find((avail: any) => avail.doctorId === appointmentData.doctorId && avail.date === appointmentData.date);
-    if (availRecord && availRecord.isAvailable === false) {
-      return NextResponse.json({
-        success: false,
-        error: 'Doctor unavailable',
-        message: 'Doctor is unavailable on this date'
-      }, { status: 409 });
-    }
-
-    // Check if date is a working day for the doctor
-    const requestedDate = new Date(appointmentData.date);
-    const dayName = requestedDate.toLocaleDateString('en-US', { weekday: 'long' });
-    if (!doctor.workingDays.includes(dayName)) {
-      return NextResponse.json({
-        success: false,
-        error: 'Not working day',
-        message: 'Doctor does not work on this day'
-      }, { status: 409 });
-    }
-
-    // Prevent booking for past dates
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    if (requestedDate < today) {
-      return NextResponse.json({
-        success: false,
-        error: 'Past date',
-        message: 'Cannot book appointments for past dates'
-      }, { status: 400 });
-    }
-
-    // Check if time slot is available
-    const existingAppointment = mockAppointments.find(apt => 
-      apt.doctorId === appointmentData.doctorId && 
-      apt.date === appointmentData.date && 
-      apt.time === appointmentData.time &&
-      apt.status !== 'cancelled'
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-    if (existingAppointment) {
-      return NextResponse.json({
-        success: false,
-        error: 'Conflict',
-        message: 'Time slot is already booked'
-      }, { status: 409 });
+    const { doctor_id, patient_id, date, time, notes } = await request.json();
+
+    // Optional: Check for slot conflicts
+    const { data: existing, error: conflictError } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('doctor_id', doctor_id)
+      .eq('date', date)
+      .eq('time', time);
+    if (existing && existing.length > 0) {
+      return NextResponse.json({ error: 'Slot already booked' }, { status: 409 });
     }
 
-    // Set consultation fee based on doctor and type
-    const consultationFee = appointmentData.type === 'video' 
-      ? doctor.consultationFee - 100 
-      : doctor.consultationFee;
+    const { data, error } = await supabase
+      .from('appointments')
+      .insert([{ doctor_id, patient_id, date, time, notes }])
+      .select();
 
-    // Book the appointment
-    const newAppointment = bookAppointment({
-      doctorId: appointmentData.doctorId,
-      patientId: appointmentData.patientId,
-      date: appointmentData.date,
-      time: appointmentData.time,
-      type: appointmentData.type,
-      status: 'scheduled',
-      consultationFee,
-      notes: appointmentData.notes || ''
-    });
-
-    // Enhance response with doctor information
-    const enhancedAppointment = {
-      ...newAppointment,
-      doctor: {
-        name: doctor.name,
-        specialization: doctor.specialization,
-        location: doctor.location,
-        image: doctor.image
-      }
-    };
-
-    // Notify doctor about new appointment
-    try {
-      await fetch('/api/doctor/notifications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          doctorId: appointmentData.doctorId,
-          type: 'appointment',
-          title: 'New Appointment Booked',
-          message: `New appointment scheduled for ${appointmentData.date} at ${appointmentData.time}`,
-          appointmentId: newAppointment.id
-        })
-      });
-    } catch (notificationError) {
-      console.error('Failed to send notification:', notificationError);
-      // Don't fail the appointment booking if notification fails
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: enhancedAppointment,
-      message: 'Appointment booked successfully'
-    }, { status: 201 });
-
+    return NextResponse.json({ success: true, appointment: data[0] });
   } catch (error) {
-    console.error('Error booking appointment:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Internal server error',
-      message: 'Failed to book appointment'
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
