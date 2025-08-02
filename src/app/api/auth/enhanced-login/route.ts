@@ -56,40 +56,55 @@ export async function POST(request: NextRequest) {
   try {
     const { phone, password } = await request.json();
 
-    if (!phone || !password) {
+    if (!phone) {
       return NextResponse.json({
         success: false,
-        error: 'Phone number and password are required'
+        error: 'Phone number is required'
       }, { status: 400 });
     }
 
-    // Demo users (for development)
-    const demoUsers = [
-      { type: 'patient', phone: '9042222856', password: 'password123', userData: { phone: '9042222856' } },
-      { type: 'doctor', phone: '9876543210', password: 'password123', userData: { id: '1', phone: '9876543210', name: 'Dr. Sarah Wilson', specialization: 'Psychologist', email: 'sarah.wilson@hospital.com' } },
-      { type: 'doctor', phone: '9876543211', password: 'password123', userData: { id: '2', phone: '9876543211', name: 'Dr. Michael Chen', specialization: 'Cardiologist', email: 'michael.chen@hospital.com' } },
-      { type: 'doctor', phone: '9876543212', password: 'password123', userData: { id: '3', phone: '9876543212', name: 'Dr. Emily Davis', specialization: 'Dermatologist', email: 'emily.davis@hospital.com' } },
-      { type: 'doctor', phone: '9876543213', password: 'password123', userData: { id: '4', phone: '9876543213', name: 'Dr. James Brown', specialization: 'Pediatrician', email: 'james.brown@hospital.com' } },
-      { type: 'doctor', phone: '9876543214', password: 'password123', userData: { id: '5', phone: '9876543214', name: 'Dr. Lisa Johnson', specialization: 'Orthopedic', email: 'lisa.johnson@hospital.com' } },
+    // Doctor phone numbers (if phone starts with 987654, it's a doctor)
+    const doctorPhones = [
+      '9876543210', // Dr. Sarah Wilson
+      '9876543211', // Dr. Michael Chen  
+      '9876543212', // Dr. Emily Davis
+      '9876543213', // Dr. James Brown
+      '9876543214', // Dr. Lisa Johnson
     ];
 
-    const found = demoUsers.find(u => u.phone === phone && u.password === password);
-    if (!found) {
-      return NextResponse.json({
-        success: false,
-        error: 'Invalid phone or password'
-      }, { status: 401 });
+    // Check if it's a doctor phone number
+    const isDoctor = doctorPhones.includes(phone);
+    
+    let userData;
+    let userType;
+
+    if (isDoctor) {
+      // Doctor data
+      const doctorData = {
+        '9876543210': { id: '1', name: 'Dr. Sarah Wilson', specialization: 'Psychologist', email: 'sarah.wilson@hospital.com' },
+        '9876543211': { id: '2', name: 'Dr. Michael Chen', specialization: 'Cardiologist', email: 'michael.chen@hospital.com' },
+        '9876543212': { id: '3', name: 'Dr. Emily Davis', specialization: 'Dermatologist', email: 'emily.davis@hospital.com' },
+        '9876543213': { id: '4', name: 'Dr. James Brown', specialization: 'Pediatrician', email: 'james.brown@hospital.com' },
+        '9876543214': { id: '5', name: 'Dr. Lisa Johnson', specialization: 'Orthopedic', email: 'lisa.johnson@hospital.com' },
+      };
+      
+      userType = 'doctor';
+      userData = { phone, ...doctorData[phone as keyof typeof doctorData] };
+    } else {
+      // Patient (any other phone number)
+      userType = 'patient';
+      userData = { phone, name: 'Patient' };
     }
 
-    // Simulate auth token
-    const authToken = `${found.type}-demo-token`;
-    const redirectUrl = found.type === 'doctor' ? '/doctor-dashboard' : '/patient-dashboard';
+    // Generate auth token
+    const authToken = `${userType}-demo-token-${Date.now()}`;
+    const redirectUrl = userType === 'doctor' ? '/doctor-dashboard' : '/patient-dashboard';
 
     return NextResponse.json({
       success: true,
       authToken,
-      userType: found.type,
-      userData: found.userData,
+      userType,
+      userData,
       redirectUrl
     });
 

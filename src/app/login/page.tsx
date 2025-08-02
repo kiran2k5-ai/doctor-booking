@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { signIn, useSession } from 'next-auth/react';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
   const [contact, setContact] = useState('');
@@ -10,6 +12,16 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { data: session, status } = useSession();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      const userType = session.user.userType || 'patient';
+      const redirectUrl = userType === 'doctor' ? '/doctor-dashboard' : '/patient-dashboard';
+      router.push(redirectUrl);
+    }
+  }, [session, status, router]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -43,6 +55,26 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const result = await signIn('google', {
+        redirect: false,
+        callbackUrl: '/dashboard'
+      });
+      
+      if (result?.error) {
+        setError('Google login failed. Please try again.');
+      }
+    } catch (err) {
+      setError('Google login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="min-h-screen flex flex-col justify-center px-6 py-12">
@@ -53,10 +85,11 @@ export default function LoginPage() {
             
             {/* Demo Credentials */}
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-800 font-medium mb-2">Demo Credentials:</p>
+              <p className="text-xs text-blue-800 font-medium mb-2">Demo Login:</p>
               <div className="text-xs text-blue-700 space-y-1">
-                <p><strong>Patient:</strong> 9042222856 / password123</p>
-                <p><strong>Doctor:</strong> 9876543210 / password123</p>
+                <p><strong>Patient:</strong> Any phone number (e.g., 9042222856)</p>
+                <p><strong>Doctor:</strong> 987654321X (e.g., 9876543210)</p>
+                <p className="text-blue-600 italic">Password optional for demo</p>
               </div>
             </div>
           </div>
@@ -87,7 +120,7 @@ export default function LoginPage() {
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
+                Password <span className="text-gray-400 text-xs">(optional for demo)</span>
               </label>
               <input
                 id="password"
@@ -95,9 +128,8 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder="Enter your password (optional)"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm text-gray-900 placeholder-gray-400 bg-white"
-                required
               />
             </div>
 
@@ -123,7 +155,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={isLoading || !contact.trim() || !password.trim()}
+              disabled={isLoading || !contact.trim()}
               className="w-full bg-cyan-400 hover:bg-cyan-500 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition duration-200"
             >
               {isLoading ? 'Logging in...' : 'Login'}
@@ -140,7 +172,9 @@ export default function LoginPage() {
 
             <button
               type="button"
-              className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition duration-200"
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition duration-200"
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path

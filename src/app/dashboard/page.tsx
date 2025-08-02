@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { 
   MagnifyingGlassIcon, 
   BellIcon,
@@ -15,16 +16,39 @@ export default function DashboardPage() {
   const [user, setUser] = useState<{ phone: string; name?: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    // Get user data from localStorage
+    if (status === 'loading') return; // Still loading
+
+    // Handle Google OAuth session
+    if (session?.user) {
+      const userType = session.user.userType || 'patient';
+      const redirectUrl = userType === 'doctor' ? '/doctor-dashboard' : '/patient-dashboard';
+      
+      // Save session data to localStorage for compatibility
+      localStorage.setItem('authToken', `google-${session.user.id}`);
+      localStorage.setItem('userType', userType);
+      localStorage.setItem('userData', JSON.stringify({
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        phone: session.user.email, // Use email as phone for Google users
+        userType: userType
+      }));
+
+      router.push(redirectUrl);
+      return;
+    }
+
+    // Handle traditional login
     const userData = localStorage.getItem('user');
     if (!userData) {
       router.push('/login');
       return;
     }
     setUser(JSON.parse(userData));
-  }, [router]);
+  }, [router, session, status]);
 
   const doctors = [
     {
