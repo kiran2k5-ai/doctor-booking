@@ -65,12 +65,12 @@ export async function POST(request: NextRequest) {
 
     // Demo users (for development)
     const demoUsers = [
-      { type: 'patient', phone: '9042222856', password: 'patient123', userData: { phone: '9042222856' } },
-      { type: 'doctor', phone: '9876543210', password: 'doctor123', userData: { id: '1', phone: '9876543210', name: 'Dr. Prakash Das', specialization: 'Psychologist', email: 'prakash.das@hospital.com' } },
-      { type: 'doctor', phone: '9876543211', password: 'doctor123', userData: { id: '2', phone: '9876543211', name: 'Dr. Sarah Wilson', specialization: 'Cardiologist', email: 'sarah.wilson@hospital.com' } },
-      { type: 'doctor', phone: '9876543212', password: 'doctor123', userData: { id: '3', phone: '9876543212', name: 'Dr. Michael Chen', specialization: 'Dermatologist', email: 'michael.chen@hospital.com' } },
-      { type: 'doctor', phone: '9876543213', password: 'doctor123', userData: { id: '4', phone: '9876543213', name: 'Dr. Emily Rodriguez', specialization: 'Pediatrician', email: 'emily.rodriguez@hospital.com' } },
-      { type: 'doctor', phone: '9876543214', password: 'doctor123', userData: { id: '5', phone: '9876543214', name: 'Dr. James Park', specialization: 'Orthopedic', email: 'james.park@hospital.com' } },
+      { type: 'patient', phone: '9042222856', password: 'password123', userData: { phone: '9042222856' } },
+      { type: 'doctor', phone: '9876543210', password: 'password123', userData: { id: '1', phone: '9876543210', name: 'Dr. Sarah Wilson', specialization: 'Psychologist', email: 'sarah.wilson@hospital.com' } },
+      { type: 'doctor', phone: '9876543211', password: 'password123', userData: { id: '2', phone: '9876543211', name: 'Dr. Michael Chen', specialization: 'Cardiologist', email: 'michael.chen@hospital.com' } },
+      { type: 'doctor', phone: '9876543212', password: 'password123', userData: { id: '3', phone: '9876543212', name: 'Dr. Emily Davis', specialization: 'Dermatologist', email: 'emily.davis@hospital.com' } },
+      { type: 'doctor', phone: '9876543213', password: 'password123', userData: { id: '4', phone: '9876543213', name: 'Dr. James Brown', specialization: 'Pediatrician', email: 'james.brown@hospital.com' } },
+      { type: 'doctor', phone: '9876543214', password: 'password123', userData: { id: '5', phone: '9876543214', name: 'Dr. Lisa Johnson', specialization: 'Orthopedic', email: 'lisa.johnson@hospital.com' } },
     ];
 
     const found = demoUsers.find(u => u.phone === phone && u.password === password);
