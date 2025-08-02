@@ -1,8 +1,18 @@
 // Doctor availability API
 import { NextRequest, NextResponse } from 'next/server';
 
+// Interface definitions
+interface AvailabilitySlot {
+  id: string;
+  doctorId: string;
+  date: string;
+  timeSlots: string[];
+  isAvailable: boolean;
+  notes: string;
+}
+
 // Mock availability data storage
-export let doctorAvailability: any[] = [
+const doctorAvailability: AvailabilitySlot[] = [
   {
     id: '1',
     doctorId: '1',

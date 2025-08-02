@@ -50,6 +50,15 @@ export default function LoginPage() {
           <div className="text-center mb-8">
             <h1 className="text-2xl font-semibold text-gray-900 mb-2">Login</h1>
             <p className="text-gray-600 text-sm">Too Scheduled</p>
+            
+            {/* Demo Credentials */}
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-800 font-medium mb-2">Demo Credentials:</p>
+              <div className="text-xs text-blue-700 space-y-1">
+                <p><strong>Patient:</strong> 9042222856 / patient123</p>
+                <p><strong>Doctor:</strong> 9876543210 / doctor123</p>
+              </div>
+            </div>
           </div>
 
 

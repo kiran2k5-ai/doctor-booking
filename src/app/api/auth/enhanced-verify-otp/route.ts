@@ -1,5 +1,3 @@
-// Global set to store verified auth tokens for demo session validation
-export const verifiedAuthTokens = new Set<string>();
 // Enhanced OTP verification for both doctors and patients
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -39,8 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Import OTP store from login route (correct relative path)
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { otpStore } = require('../enhanced-login/route');
+    const { otpStore } = await import('../enhanced-login/route');
     const stored = otpStore[otpData.phone];
     console.log('OTP VERIFY: OTP store entry for phone:', otpData.phone, stored);
     if (!stored || Date.now() > stored.expiresAt) {
@@ -69,9 +66,6 @@ export async function POST(request: NextRequest) {
       userData: otpData.userData,
       loginTime: Date.now()
     })).toString('base64');
-
-    // Store the verified token for session validation in appointments route
-    verifiedAuthTokens.add(authToken);
 
     return NextResponse.json({
       success: true,

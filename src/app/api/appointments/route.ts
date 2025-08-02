@@ -1,8 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { mockAppointments, findDoctorById } from '../doctors/storage';
+
+// Interface definitions
+interface Appointment {
+  id: string;
+  doctorId: string;
+  patientId: string;
+  date: string;
+  time: string;
+  type: string;
+  status: string;
+  consultationFee?: number;
+  notes?: string;
+  createdAt?: string;
+  doctor?: {
+    name: string;
+    specialization: string;
+    location: string;
+    image: string;
+  } | null;
+}
 
 // Helper function to get appointments from request headers (localStorage data)
-function getAppointmentsFromClient(request: NextRequest) {
+function getAppointmentsFromClient(request: NextRequest): Appointment[] | null {
   const clientData = request.headers.get('x-appointments-data');
   if (clientData) {
     try {
@@ -34,16 +55,16 @@ export async function GET(request: NextRequest) {
 
     // Filter by patient ID if provided
     if (patientId) {
-      filteredAppointments = filteredAppointments.filter((apt: any) => apt.patientId === patientId);
+      filteredAppointments = filteredAppointments.filter((apt: Appointment) => apt.patientId === patientId);
     }
 
     // Filter by status if provided
     if (status) {
-      filteredAppointments = filteredAppointments.filter((apt: any) => apt.status === status);
+      filteredAppointments = filteredAppointments.filter((apt: Appointment) => apt.status === status);
     }
 
     // Enhance appointments with doctor information
-    const enhancedAppointments = filteredAppointments.map((appointment: any) => {
+    const enhancedAppointments = filteredAppointments.map((appointment: Appointment) => {
       const doctor = findDoctorById(appointment.doctorId);
       return {
         ...appointment,
@@ -57,8 +78,8 @@ export async function GET(request: NextRequest) {
     });
 
     // Remove any duplicate IDs before sending response
-    const uniqueAppointments = enhancedAppointments.filter((appointment: any, index: number, self: any[]) => 
-      index === self.findIndex((apt: any) => apt.id === appointment.id)
+    const uniqueAppointments = enhancedAppointments.filter((appointment: Appointment, index: number, self: Appointment[]) => 
+      index === self.findIndex((apt: Appointment) => apt.id === appointment.id)
     );
 
     console.log(`Returning ${uniqueAppointments.length} unique appointments for patient ${patientId} (filtered from ${enhancedAppointments.length})`);
